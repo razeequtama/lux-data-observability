@@ -9,7 +9,7 @@ This document is the single source of truth for implementation tracking across e
 | Milestone | Description | Tasks | Status |
 |---|---|---|---|
 | **M0** | Core Foundation, Tooling & Scaffolding | `T01`, `T02` | `COMPLETED` |
-| **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `IN_PROGRESS` |
+| **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `COMPLETED` |
 | **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `NOT_STARTED` |
 | **M3** | Lineage DAG Domain Engine & Graph Integrity Validator | `T09`, `T10`, `T11` | `NOT_STARTED` |
 | **M4** | Pipeline Observability & Run History | `T12`, `T13` | `NOT_STARTED` |
@@ -28,7 +28,7 @@ This document is the single source of truth for implementation tracking across e
 | `T02` | Frontend Scaffolding, Tooling & Lux Purple Tokens | None | `COMPLETED` | `vitest` 6 passed; `tsc` & `eslint` 0 errors; production build verified |
 | `T03` | Relational Database Schema & SQLite Persistence Engine | `T01` | `COMPLETED` | `pytest` 14 passed (9 db integration); `ruff` & `mypy` 0 errors; WAL mode, all 11 tables, indices, and cascades verified |
 | `T04` | Bundled Signature Fixtures & Scenario Metadata Definition | None | `COMPLETED` | `pytest tests/unit/test_fixtures.py` 8 passed; 1,250 orders, 3,420 items, 250 prods, 250 inv; 15 dups, 24 orphaned, 8 neg inv, 1 temporal gap verified |
-| `T05` | Dataset Ingestion, Scenario Loader & Upload Security Service | `T01`, `T03`, `T04` | `NOT_STARTED` | — |
+| `T05` | Dataset Ingestion, Scenario Loader & Upload Security Service | `T01`, `T03`, `T04` | `COMPLETED` | `pytest tests/integration/test_ingestion_api.py` 14 passed; `pytest` 43 passed; `ruff` and `mypy` 0 errors; load scenario (200), preview, 20MB limit (413), and path traversal rejection (400) verified |
 | `T06` | Validation Rule Framework & Core Rule Evaluators | `T01`, `T03` | `NOT_STARTED` | — |
 | `T07` | Relational, Temporal & Schema Rule Evaluators | `T06` | `NOT_STARTED` | — |
 | `T08` | Validation Runner Service, Persistence & Structured Findings API | `T03`, `T05`, `T06`, `T07` | `NOT_STARTED` | — |
@@ -53,9 +53,10 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestone **M0** (`T01`, `T02`) is `COMPLETED`. Milestone **M1** is `IN_PROGRESS` with `T03` (Relational Database Schema & SQLite Persistence Engine) and `T04` (Bundled Signature Fixtures & Scenario Metadata Definition) `COMPLETED` and verified.
+- **Current State:** Milestone **M0** (`T01`, `T02`) and Milestone **M1** (`T03`, `T04`, `T05`) are `COMPLETED` and verified.
 - **Next Eligible Tasks:**
-  - `T05` (Dataset Ingestion, Scenario Loader & Upload Security Service) — Prerequisites satisfied (`T01`, `T03`, `T04`). Completing `T05` will mark Milestone **M1** as `COMPLETED`.
+  - `T06` (Validation Rule Framework & Core Rule Evaluators) — Prerequisites satisfied (`T01`, `T03`). Initiates Milestone **M2**.
+  - `T09` (Lineage DAG Domain Engine & Graph Integrity Validator) — Prerequisites satisfied (`T01`, `T03`). Initiates Milestone **M3**.
 
 ---
 
@@ -149,3 +150,31 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && mypy app` -> Success: no issues found in 28 source files.
   - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 881ms (no regressions).
 - **Remaining Limitations:** None. Fixtures and metadata are generated, verified, and ready for ingestion service loading (`T05`).
+
+### `T05` — Dataset Ingestion, Scenario Loader & Upload Security Service
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/schemas/dataset.py`: Pydantic domain models for datasets (`DatasetResponse`, `DatasetPreviewResponse`, `DatasetUploadResponse`, `ColumnSchema`).
+  - `backend/app/schemas/scenario.py`: Pydantic models for scenario catalog and lifecycle (`ScenarioSummary`, `ScenarioDetail`, `LoadScenarioRequest`, `LoadScenarioResponse`).
+  - `backend/app/services/ingestion/reader.py`: `DatasetReader` streaming engine supporting chunked CSV and JSON inspection, column type inference, record counts, and strictly paginated preview rows (capped at 100 rows per request per `docs/security.md`).
+  - `backend/app/services/ingestion/security.py`: File upload security handler enforcing 20MB file size limit (`PayloadTooLargeError` HTTP 413), strict extension whitelist (`.csv`, `.json`), path traversal prevention (rejecting `..`, `/`, `\\`, and raw/URL-encoded null bytes with HTTP 400), content sniffing (rejecting binary streams, null bytes, zip archives), and isolated UUID directory isolation in `data/uploads/{uuid4()}/`.
+  - `backend/app/services/ingestion/loader.py`: `ScenarioLoaderService` parsing bundled scenario metadata (`scenario.json`), quality rules catalog (`rules.json`), and pipeline history (`pipeline_history.json`), and idempotently loading into SQLite entities (`Scenario`, `Dataset`, `ValidationRule`, `LineageNode`, `LineageEdge`, `PipelineRun`, `FreshnessCheck`). Supports both `"defective"` and `"corrected"` recovery fixtures.
+  - `backend/app/api/v1/`: Modular FastAPI endpoints:
+    - `GET /api/v1/scenarios`: Enumerate bundled scenarios with dataset and rule counts.
+    - `GET /api/v1/scenarios/{id}`: Detailed scenario configuration and dataset descriptors.
+    - `POST /api/v1/scenarios/{id}/load`: Idempotent scenario fixture loader with versioning.
+    - `GET /api/v1/datasets`: List all datasets, filterable by `scenario_id`.
+    - `GET /api/v1/datasets/{id}`: Retrieve dataset metadata.
+    - `GET /api/v1/datasets/{id}/preview`: Paginated row viewer with limit and offset.
+    - `POST /api/v1/datasets/upload`: Multipart dataset upload with complete security guardrails.
+  - `backend/tests/integration/test_ingestion_api.py`: 14-test integration test suite covering scenario loading, preview row pagination, upper bound limits, 404 error envelopes, oversized file rejection (HTTP 413), path traversal attack rejection (HTTP 400), extension whitelist enforcement, custom dataset upload and preview, and recovery reloading.
+  - `backend/tests/unit/test_ingestion_service.py`: 7-test unit suite validating type inference, value casting, filename validation, and content sniffing.
+- **Verification Evidence:**
+  - `cd backend && pytest tests/integration/test_ingestion_api.py -v` -> 14 passed in 1.98s.
+  - `cd backend && pytest tests/unit/test_ingestion_service.py -v` -> 7 passed in 0.03s.
+  - `cd backend && pytest -v` -> 43 passed in 4.08s (all test suites passing).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 48 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 37 source files.
+  - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 899ms (zero frontend regressions).
+- **Remaining Limitations:** None. Ingestion service, scenario loader, upload security, and dataset preview APIs are fully operational and verified. Milestone M1 is complete. Ready for Milestone M2 (`T06` - Validation Rule Framework).

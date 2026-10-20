@@ -46,6 +46,9 @@ class NotFoundError(LuxException):
         )
 
 
+HTTP_413_STATUS = getattr(status, "HTTP_413_CONTENT_TOO_LARGE", 413)
+
+
 class PayloadTooLargeError(LuxException):
     """Payload exceeds allowed limit."""
 
@@ -58,7 +61,7 @@ class PayloadTooLargeError(LuxException):
         super().__init__(
             code=code,
             message=message,
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=HTTP_413_STATUS,
             details=details,
         )
 
@@ -110,7 +113,7 @@ async def http_exception_handler(_: Request, exc: StarletteHTTPException) -> JSO
             code = "UNAUTHORIZED"
         elif exc.status_code == status.HTTP_400_BAD_REQUEST:
             code = "BAD_REQUEST"
-        elif exc.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE:
+        elif exc.status_code == 413:
             code = "PAYLOAD_TOO_LARGE"
     else:
         message = str(detail)

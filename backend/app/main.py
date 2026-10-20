@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1 import api_v1_router
 from app.core.config import settings
 from app.core.errors import register_error_handlers
 from app.db.init_db import init_db
@@ -50,6 +51,9 @@ def create_app() -> FastAPI:
 
     # Centralized error handling
     register_error_handlers(app)
+
+    # API v1 endpoints
+    app.include_router(api_v1_router, prefix=settings.api_v1_str)
 
     # Root health check endpoint
     @app.get(
