@@ -142,4 +142,3 @@ class ValidationFinding(Base):
     investigations: Mapped[list[Investigation]] = relationship(
         "Investigation", back_populates="initial_finding"
     )
-

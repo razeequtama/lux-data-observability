@@ -84,4 +84,3 @@ class LineageEdge(Base):
     target_node: Mapped[LineageNode] = relationship(
         "LineageNode", foreign_keys=[target_id], back_populates="incoming_edges"
     )
-

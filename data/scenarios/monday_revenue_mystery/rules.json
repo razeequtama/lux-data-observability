@@ -1,0 +1,112 @@
+{
+  "scenario_id": "monday_revenue_mystery",
+  "rules": [
+    {
+      "id": "VAL-ORD-001",
+      "dataset_id": "orders",
+      "name": "Order ID Uniqueness Check",
+      "category": "UNIQUENESS",
+      "severity": "CRITICAL",
+      "parameters": {
+        "column": "order_id"
+      },
+      "description": "Ensures all order IDs in orders.csv are unique and no duplicates exist.",
+      "is_active": true
+    },
+    {
+      "id": "VAL-ORD-002",
+      "dataset_id": "order_items",
+      "name": "Order Items Foreign Key Check",
+      "category": "REFERENTIAL_INTEGRITY",
+      "severity": "HIGH",
+      "parameters": {
+        "column": "product_id",
+        "parent_dataset": "products",
+        "parent_column": "product_id"
+      },
+      "description": "Ensures all product_id references in order_items.csv exist in products.csv.",
+      "is_active": true
+    },
+    {
+      "id": "VAL-INV-001",
+      "dataset_id": "inventory",
+      "name": "Inventory Non-Negative Check",
+      "category": "VALUE_RANGE",
+      "severity": "HIGH",
+      "parameters": {
+        "column": "quantity_on_hand",
+        "min_value": 0
+      },
+      "description": "Ensures inventory quantity on hand is never negative.",
+      "is_active": true
+    },
+    {
+      "id": "VAL-FRESH-001",
+      "dataset_id": "orders",
+      "name": "Partition Freshness Check",
+      "category": "FRESHNESS",
+      "severity": "MEDIUM",
+      "parameters": {
+        "column": "order_date",
+        "sla_hours": 24,
+        "max_gap_hours": 4
+      },
+      "description": "Detects missing transaction windows or ingestion delays exceeding SLA thresholds.",
+      "is_active": true
+    },
+    {
+      "id": "VAL-ORD-003",
+      "dataset_id": "orders",
+      "name": "Orders Mandatory Fields Check",
+      "category": "NULL_CHECK",
+      "severity": "CRITICAL",
+      "parameters": {
+        "columns": [
+          "order_id",
+          "customer_id",
+          "order_date",
+          "total_amount"
+        ]
+      },
+      "description": "Verifies that essential order header fields contain no null or empty values.",
+      "is_active": true
+    },
+    {
+      "id": "VAL-PRD-001",
+      "dataset_id": "products",
+      "name": "Product ID Uniqueness Check",
+      "category": "UNIQUENESS",
+      "severity": "CRITICAL",
+      "parameters": {
+        "column": "product_id"
+      },
+      "description": "Ensures product catalog primary keys are unique.",
+      "is_active": true
+    },
+    {
+      "id": "VAL-PRD-002",
+      "dataset_id": "products",
+      "name": "Product Base Price Positive Check",
+      "category": "VALUE_RANGE",
+      "severity": "HIGH",
+      "parameters": {
+        "column": "base_price",
+        "min_value": 0.01
+      },
+      "description": "Ensures base price of products is greater than zero.",
+      "is_active": true
+    },
+    {
+      "id": "VAL-INV-002",
+      "dataset_id": "inventory",
+      "name": "Inventory SKU Uniqueness Check",
+      "category": "UNIQUENESS",
+      "severity": "CRITICAL",
+      "parameters": {
+        "column": "sku"
+      },
+      "description": "Ensures each SKU has a single inventory record per warehouse.",
+      "is_active": true
+    }
+  ]
+}

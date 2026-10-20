@@ -1,0 +1,148 @@
+{
+  "scenario_id": "monday_revenue_mystery",
+  "pipeline_runs": [
+    {
+      "id": "pipe_run_20261018_0200",
+      "scenario_id": "monday_revenue_mystery",
+      "pipeline_name": "nightly_ecommerce_etl",
+      "execution_status": "COMPLETED_SUCCESS",
+      "quality_health": "HEALTHY",
+      "start_time": "2026-10-18T02:00:00Z",
+      "end_time": "2026-10-18T02:07:45Z",
+      "duration_ms": 465000,
+      "records_ingested": 4500,
+      "records_written": 4500,
+      "error_message": null,
+      "run_log": [
+        {
+          "step": "extract_sources",
+          "status": "SUCCESS",
+          "records": 4500,
+          "duration_ms": 110000
+        },
+        {
+          "step": "transform_clean_orders",
+          "status": "SUCCESS",
+          "records": 1200,
+          "duration_ms": 95000
+        },
+        {
+          "step": "transform_order_line_items",
+          "status": "SUCCESS",
+          "records": 3300,
+          "duration_ms": 140000
+        },
+        {
+          "step": "aggregate_daily_revenue",
+          "status": "SUCCESS",
+          "records": 1,
+          "duration_ms": 120000
+        }
+      ]
+    },
+    {
+      "id": "pipe_run_20261019_0200",
+      "scenario_id": "monday_revenue_mystery",
+      "pipeline_name": "nightly_ecommerce_etl",
+      "execution_status": "COMPLETED_SUCCESS",
+      "quality_health": "HEALTHY",
+      "start_time": "2026-10-19T02:00:00Z",
+      "end_time": "2026-10-19T02:08:02Z",
+      "duration_ms": 482000,
+      "records_ingested": 4600,
+      "records_written": 4600,
+      "error_message": null,
+      "run_log": [
+        {
+          "step": "extract_sources",
+          "status": "SUCCESS",
+          "records": 4600,
+          "duration_ms": 115000
+        },
+        {
+          "step": "transform_clean_orders",
+          "status": "SUCCESS",
+          "records": 1220,
+          "duration_ms": 98000
+        },
+        {
+          "step": "transform_order_line_items",
+          "status": "SUCCESS",
+          "records": 3380,
+          "duration_ms": 145000
+        },
+        {
+          "step": "aggregate_daily_revenue",
+          "status": "SUCCESS",
+          "records": 1,
+          "duration_ms": 124000
+        }
+      ]
+    },
+    {
+      "id": "pipe_run_20261020_0200",
+      "scenario_id": "monday_revenue_mystery",
+      "pipeline_name": "nightly_ecommerce_etl",
+      "execution_status": "COMPLETED_SUCCESS",
+      "quality_health": "HEALTHY",
+      "start_time": "2026-10-20T02:00:00Z",
+      "end_time": "2026-10-20T02:08:14Z",
+      "duration_ms": 494000,
+      "records_ingested": 4670,
+      "records_written": 4670,
+      "error_message": null,
+      "run_log": [
+        {
+          "step": "extract_sources",
+          "status": "SUCCESS",
+          "records": 4670,
+          "duration_ms": 120000
+        },
+        {
+          "step": "transform_clean_orders",
+          "status": "SUCCESS",
+          "records": 1250,
+          "duration_ms": 102000
+        },
+        {
+          "step": "transform_order_line_items",
+          "status": "SUCCESS",
+          "records": 3420,
+          "duration_ms": 147000
+        },
+        {
+          "step": "aggregate_daily_revenue",
+          "status": "SUCCESS",
+          "records": 1,
+          "duration_ms": 125000
+        }
+      ]
+    }
+  ],
+  "freshness_checks": [
+    {
+      "id": "fresh_orders_20261020",
+      "scenario_id": "monday_revenue_mystery",
+      "dataset_id": "orders",
+      "dataset_name": "orders.csv",
+      "expected_partition_timestamp": "2026-10-19T23:59:59Z",
+      "observed_partition_timestamp": "2026-10-19T23:55:00Z",
+      "sla_hours": 24,
+      "status": "FRESH",
+      "hours_behind": 0.0,
+      "checked_at": "2026-10-20T02:10:00Z"
+    },
+    {
+      "id": "fresh_inventory_20261020",
+      "scenario_id": "monday_revenue_mystery",
+      "dataset_id": "inventory",
+      "dataset_name": "inventory.csv",
+      "expected_partition_timestamp": "2026-10-20T01:00:00Z",
+      "observed_partition_timestamp": "2026-10-20T01:30:00Z",
+      "sla_hours": 6,
+      "status": "FRESH",
+      "hours_behind": 0.0,
+      "checked_at": "2026-10-20T02:10:00Z"
+    }
+  ]
+}

@@ -1,0 +1,297 @@
+{
+  "id": "monday_revenue_mystery",
+  "name": "Monday Revenue Mystery",
+  "description": "Daily revenue metrics report unexpected spikes following a successful overnight pipeline run.",
+  "category": "e-commerce",
+  "version": "1.0.0",
+  "datasets": [
+    {
+      "id": "orders",
+      "name": "orders.csv",
+      "format": "csv",
+      "defective_path": "defective/orders.csv",
+      "corrected_path": "corrected/orders.csv",
+      "expected_record_count": 1250,
+      "columns": [
+        {
+          "name": "order_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "order_date",
+          "type": "timestamp",
+          "nullable": false
+        },
+        {
+          "name": "order_status",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "total_amount",
+          "type": "float",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "id": "order_items",
+      "name": "order_items.csv",
+      "format": "csv",
+      "defective_path": "defective/order_items.csv",
+      "corrected_path": "corrected/order_items.csv",
+      "expected_record_count": 3420,
+      "columns": [
+        {
+          "name": "item_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "quantity",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "unit_price",
+          "type": "float",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "id": "products",
+      "name": "products.csv",
+      "format": "csv",
+      "defective_path": "defective/products.csv",
+      "corrected_path": "corrected/products.csv",
+      "expected_record_count": 250,
+      "columns": [
+        {
+          "name": "product_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "sku",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "base_price",
+          "type": "float",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "id": "inventory",
+      "name": "inventory.csv",
+      "format": "csv",
+      "defective_path": "defective/inventory.csv",
+      "corrected_path": "corrected/inventory.csv",
+      "expected_record_count": 250,
+      "columns": [
+        {
+          "name": "sku",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "warehouse_id",
+          "type": "string",
+          "nullable": false
+        },
+        {
+          "name": "quantity_on_hand",
+          "type": "integer",
+          "nullable": false
+        },
+        {
+          "name": "last_updated",
+          "type": "timestamp",
+          "nullable": false
+        }
+      ]
+    }
+  ],
+  "lineage": {
+    "nodes": [
+      {
+        "id": "src_orders",
+        "name": "orders.csv",
+        "type": "SOURCE_DATASET",
+        "dataset_id": "orders"
+      },
+      {
+        "id": "src_order_items",
+        "name": "order_items.csv",
+        "type": "SOURCE_DATASET",
+        "dataset_id": "order_items"
+      },
+      {
+        "id": "src_products",
+        "name": "products.csv",
+        "type": "SOURCE_DATASET",
+        "dataset_id": "products"
+      },
+      {
+        "id": "src_inventory",
+        "name": "inventory.csv",
+        "type": "SOURCE_DATASET",
+        "dataset_id": "inventory"
+      },
+      {
+        "id": "tf_orders",
+        "name": "transform_clean_orders",
+        "type": "TRANSFORMATION",
+        "metadata": {
+          "engine": "SQL"
+        }
+      },
+      {
+        "id": "tf_items",
+        "name": "transform_order_line_items",
+        "type": "TRANSFORMATION",
+        "metadata": {
+          "engine": "SQL"
+        }
+      },
+      {
+        "id": "tf_inventory",
+        "name": "transform_inventory_snapshot",
+        "type": "TRANSFORMATION",
+        "metadata": {
+          "engine": "Python"
+        }
+      },
+      {
+        "id": "tf_revenue",
+        "name": "aggregate_daily_revenue",
+        "type": "TRANSFORMATION",
+        "metadata": {
+          "engine": "SQL"
+        }
+      },
+      {
+        "id": "dim_orders",
+        "name": "dim_orders",
+        "type": "DERIVED_DATASET"
+      },
+      {
+        "id": "fct_order_items",
+        "name": "fct_order_items",
+        "type": "DERIVED_DATASET"
+      },
+      {
+        "id": "dim_inventory",
+        "name": "dim_inventory",
+        "type": "DERIVED_DATASET"
+      },
+      {
+        "id": "agg_daily_revenue",
+        "name": "agg_daily_revenue",
+        "type": "DERIVED_DATASET"
+      },
+      {
+        "id": "metric_revenue",
+        "name": "Metric: Total Daily Revenue",
+        "type": "METRIC"
+      },
+      {
+        "id": "metric_inventory",
+        "name": "Metric: Inventory Health Ratio",
+        "type": "METRIC"
+      },
+      {
+        "id": "report_exec_dash",
+        "name": "Report: Executive Monday Dashboard",
+        "type": "REPORT"
+      },
+      {
+        "id": "report_stock_alert",
+        "name": "Report: Warehouse Stock Alert",
+        "type": "REPORT"
+      }
+    ],
+    "edges": [
+      {
+        "source": "src_orders",
+        "target": "tf_orders"
+      },
+      {
+        "source": "tf_orders",
+        "target": "dim_orders"
+      },
+      {
+        "source": "src_order_items",
+        "target": "tf_items"
+      },
+      {
+        "source": "src_products",
+        "target": "tf_items"
+      },
+      {
+        "source": "tf_items",
+        "target": "fct_order_items"
+      },
+      {
+        "source": "src_inventory",
+        "target": "tf_inventory"
+      },
+      {
+        "source": "tf_inventory",
+        "target": "dim_inventory"
+      },
+      {
+        "source": "dim_orders",
+        "target": "tf_revenue"
+      },
+      {
+        "source": "fct_order_items",
+        "target": "tf_revenue"
+      },
+      {
+        "source": "tf_revenue",
+        "target": "agg_daily_revenue"
+      },
+      {
+        "source": "agg_daily_revenue",
+        "target": "metric_revenue"
+      },
+      {
+        "source": "metric_revenue",
+        "target": "report_exec_dash"
+      },
+      {
+        "source": "dim_inventory",
+        "target": "metric_inventory"
+      },
+      {
+        "source": "metric_inventory",
+        "target": "report_stock_alert"
+      }
+    ]
+  }
+}

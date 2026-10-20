@@ -1,0 +1,251 @@
+product_id,sku,category,base_price
+PRD-0001,SKU-0001,Electronics,29.99
+PRD-0002,SKU-0002,Apparel,47.48
+PRD-0003,SKU-0003,Home & Kitchen,64.97
+PRD-0004,SKU-0004,Beauty & Personal Care,82.46
+PRD-0005,SKU-0005,Sports & Outdoors,99.95
+PRD-0006,SKU-0006,Electronics,117.44
+PRD-0007,SKU-0007,Apparel,134.93
+PRD-0008,SKU-0008,Home & Kitchen,152.42
+PRD-0009,SKU-0009,Beauty & Personal Care,169.91
+PRD-0010,SKU-0010,Sports & Outdoors,182.5
+PRD-0011,SKU-0011,Electronics,199.99
+PRD-0012,SKU-0012,Apparel,217.48
+PRD-0013,SKU-0013,Home & Kitchen,234.97
+PRD-0014,SKU-0014,Beauty & Personal Care,15.46
+PRD-0015,SKU-0015,Sports & Outdoors,32.95
+PRD-0016,SKU-0016,Electronics,50.44
+PRD-0017,SKU-0017,Apparel,67.93
+PRD-0018,SKU-0018,Home & Kitchen,85.42
+PRD-0019,SKU-0019,Beauty & Personal Care,102.91
+PRD-0020,SKU-0020,Sports & Outdoors,115.5
+PRD-0021,SKU-0021,Electronics,132.99
+PRD-0022,SKU-0022,Apparel,150.48
+PRD-0023,SKU-0023,Home & Kitchen,167.97
+PRD-0024,SKU-0024,Beauty & Personal Care,185.46
+PRD-0025,SKU-0025,Sports & Outdoors,202.95
+PRD-0026,SKU-0026,Electronics,220.44
+PRD-0027,SKU-0027,Apparel,237.93
+PRD-0028,SKU-0028,Home & Kitchen,18.42
+PRD-0029,SKU-0029,Beauty & Personal Care,35.91
+PRD-0030,SKU-0030,Sports & Outdoors,48.5
+PRD-0031,SKU-0031,Electronics,65.99
+PRD-0032,SKU-0032,Apparel,83.48
+PRD-0033,SKU-0033,Home & Kitchen,100.97
+PRD-0034,SKU-0034,Beauty & Personal Care,118.46
+PRD-0035,SKU-0035,Sports & Outdoors,135.95
+PRD-0036,SKU-0036,Electronics,153.44
+PRD-0037,SKU-0037,Apparel,170.93
+PRD-0038,SKU-0038,Home & Kitchen,188.42
+PRD-0039,SKU-0039,Beauty & Personal Care,205.91
+PRD-0040,SKU-0040,Sports & Outdoors,218.5
+PRD-0041,SKU-0041,Electronics,235.99
+PRD-0042,SKU-0042,Apparel,16.48
+PRD-0043,SKU-0043,Home & Kitchen,33.97
+PRD-0044,SKU-0044,Beauty & Personal Care,51.46
+PRD-0045,SKU-0045,Sports & Outdoors,68.95
+PRD-0046,SKU-0046,Electronics,86.44
+PRD-0047,SKU-0047,Apparel,103.93
+PRD-0048,SKU-0048,Home & Kitchen,121.42
+PRD-0049,SKU-0049,Beauty & Personal Care,138.91
+PRD-0050,SKU-0050,Sports & Outdoors,151.5
+PRD-0051,SKU-0051,Electronics,168.99
+PRD-0052,SKU-0052,Apparel,186.48
+PRD-0053,SKU-0053,Home & Kitchen,203.97
+PRD-0054,SKU-0054,Beauty & Personal Care,221.46
+PRD-0055,SKU-0055,Sports & Outdoors,238.95
+PRD-0056,SKU-0056,Electronics,19.44
+PRD-0057,SKU-0057,Apparel,36.93
+PRD-0058,SKU-0058,Home & Kitchen,54.42
+PRD-0059,SKU-0059,Beauty & Personal Care,71.91
+PRD-0060,SKU-0060,Sports & Outdoors,84.5
+PRD-0061,SKU-0061,Electronics,101.99
+PRD-0062,SKU-0062,Apparel,119.48
+PRD-0063,SKU-0063,Home & Kitchen,136.97
+PRD-0064,SKU-0064,Beauty & Personal Care,154.46
+PRD-0065,SKU-0065,Sports & Outdoors,171.95
+PRD-0066,SKU-0066,Electronics,189.44
+PRD-0067,SKU-0067,Apparel,206.93
+PRD-0068,SKU-0068,Home & Kitchen,224.42
+PRD-0069,SKU-0069,Beauty & Personal Care,241.91
+PRD-0070,SKU-0070,Sports & Outdoors,17.5
+PRD-0071,SKU-0071,Electronics,34.99
+PRD-0072,SKU-0072,Apparel,52.48
+PRD-0073,SKU-0073,Home & Kitchen,69.97
+PRD-0074,SKU-0074,Beauty & Personal Care,87.46
+PRD-0075,SKU-0075,Sports & Outdoors,104.95
+PRD-0076,SKU-0076,Electronics,122.44
+PRD-0077,SKU-0077,Apparel,139.93
+PRD-0078,SKU-0078,Home & Kitchen,157.42
+PRD-0079,SKU-0079,Beauty & Personal Care,174.91
+PRD-0080,SKU-0080,Sports & Outdoors,187.5
+PRD-0081,SKU-0081,Electronics,204.99
+PRD-0082,SKU-0082,Apparel,222.48
+PRD-0083,SKU-0083,Home & Kitchen,239.97
+PRD-0084,SKU-0084,Beauty & Personal Care,20.46
+PRD-0085,SKU-0085,Sports & Outdoors,37.95
+PRD-0086,SKU-0086,Electronics,55.44
+PRD-0087,SKU-0087,Apparel,72.93
+PRD-0088,SKU-0088,Home & Kitchen,90.42
+PRD-0089,SKU-0089,Beauty & Personal Care,107.91
+PRD-0090,SKU-0090,Sports & Outdoors,120.5
+PRD-0091,SKU-0091,Electronics,137.99
+PRD-0092,SKU-0092,Apparel,155.48
+PRD-0093,SKU-0093,Home & Kitchen,172.97
+PRD-0094,SKU-0094,Beauty & Personal Care,190.46
+PRD-0095,SKU-0095,Sports & Outdoors,207.95
+PRD-0096,SKU-0096,Electronics,225.44
+PRD-0097,SKU-0097,Apparel,242.93
+PRD-0098,SKU-0098,Home & Kitchen,23.42
+PRD-0099,SKU-0099,Beauty & Personal Care,40.91
+PRD-0100,SKU-0100,Sports & Outdoors,53.5
+PRD-0101,SKU-0101,Electronics,70.99
+PRD-0102,SKU-0102,Apparel,88.48
+PRD-0103,SKU-0103,Home & Kitchen,105.97
+PRD-0104,SKU-0104,Beauty & Personal Care,123.46
+PRD-0105,SKU-0105,Sports & Outdoors,140.95
+PRD-0106,SKU-0106,Electronics,158.44
+PRD-0107,SKU-0107,Apparel,175.93
+PRD-0108,SKU-0108,Home & Kitchen,193.42
+PRD-0109,SKU-0109,Beauty & Personal Care,210.91
+PRD-0110,SKU-0110,Sports & Outdoors,223.5
+PRD-0111,SKU-0111,Electronics,240.99
+PRD-0112,SKU-0112,Apparel,21.48
+PRD-0113,SKU-0113,Home & Kitchen,38.97
+PRD-0114,SKU-0114,Beauty & Personal Care,56.46
+PRD-0115,SKU-0115,Sports & Outdoors,73.95
+PRD-0116,SKU-0116,Electronics,91.44
+PRD-0117,SKU-0117,Apparel,108.93
+PRD-0118,SKU-0118,Home & Kitchen,126.42
+PRD-0119,SKU-0119,Beauty & Personal Care,143.91
+PRD-0120,SKU-0120,Sports & Outdoors,156.5
+PRD-0121,SKU-0121,Electronics,173.99
+PRD-0122,SKU-0122,Apparel,191.48
+PRD-0123,SKU-0123,Home & Kitchen,208.97
+PRD-0124,SKU-0124,Beauty & Personal Care,226.46
+PRD-0125,SKU-0125,Sports & Outdoors,243.95
+PRD-0126,SKU-0126,Electronics,24.44
+PRD-0127,SKU-0127,Apparel,41.93
+PRD-0128,SKU-0128,Home & Kitchen,59.42
+PRD-0129,SKU-0129,Beauty & Personal Care,76.91
+PRD-0130,SKU-0130,Sports & Outdoors,89.5
+PRD-0131,SKU-0131,Electronics,106.99
+PRD-0132,SKU-0132,Apparel,124.48
+PRD-0133,SKU-0133,Home & Kitchen,141.97
+PRD-0134,SKU-0134,Beauty & Personal Care,159.46
+PRD-0135,SKU-0135,Sports & Outdoors,176.95
+PRD-0136,SKU-0136,Electronics,194.44
+PRD-0137,SKU-0137,Apparel,211.93
+PRD-0138,SKU-0138,Home & Kitchen,229.42
+PRD-0139,SKU-0139,Beauty & Personal Care,246.91
+PRD-0140,SKU-0140,Sports & Outdoors,22.5
+PRD-0141,SKU-0141,Electronics,39.99
+PRD-0142,SKU-0142,Apparel,57.48
+PRD-0143,SKU-0143,Home & Kitchen,74.97
+PRD-0144,SKU-0144,Beauty & Personal Care,92.46
+PRD-0145,SKU-0145,Sports & Outdoors,109.95
+PRD-0146,SKU-0146,Electronics,127.44
+PRD-0147,SKU-0147,Apparel,144.93
+PRD-0148,SKU-0148,Home & Kitchen,162.42
+PRD-0149,SKU-0149,Beauty & Personal Care,179.91
+PRD-0150,SKU-0150,Sports & Outdoors,192.5
+PRD-0151,SKU-0151,Electronics,209.99
+PRD-0152,SKU-0152,Apparel,227.48
+PRD-0153,SKU-0153,Home & Kitchen,244.97
+PRD-0154,SKU-0154,Beauty & Personal Care,25.46
+PRD-0155,SKU-0155,Sports & Outdoors,42.95
+PRD-0156,SKU-0156,Electronics,60.44
+PRD-0157,SKU-0157,Apparel,77.93
+PRD-0158,SKU-0158,Home & Kitchen,95.42
+PRD-0159,SKU-0159,Beauty & Personal Care,112.91
+PRD-0160,SKU-0160,Sports & Outdoors,125.5
+PRD-0161,SKU-0161,Electronics,142.99
+PRD-0162,SKU-0162,Apparel,160.48
+PRD-0163,SKU-0163,Home & Kitchen,177.97
+PRD-0164,SKU-0164,Beauty & Personal Care,195.46
+PRD-0165,SKU-0165,Sports & Outdoors,212.95
+PRD-0166,SKU-0166,Electronics,230.44
+PRD-0167,SKU-0167,Apparel,247.93
+PRD-0168,SKU-0168,Home & Kitchen,28.42
+PRD-0169,SKU-0169,Beauty & Personal Care,45.91
+PRD-0170,SKU-0170,Sports & Outdoors,58.5
+PRD-0171,SKU-0171,Electronics,75.99
+PRD-0172,SKU-0172,Apparel,93.48
+PRD-0173,SKU-0173,Home & Kitchen,110.97
+PRD-0174,SKU-0174,Beauty & Personal Care,128.46
+PRD-0175,SKU-0175,Sports & Outdoors,145.95
+PRD-0176,SKU-0176,Electronics,163.44
+PRD-0177,SKU-0177,Apparel,180.93
+PRD-0178,SKU-0178,Home & Kitchen,198.42
+PRD-0179,SKU-0179,Beauty & Personal Care,215.91
+PRD-0180,SKU-0180,Sports & Outdoors,228.5
+PRD-0181,SKU-0181,Electronics,245.99
+PRD-0182,SKU-0182,Apparel,26.48
+PRD-0183,SKU-0183,Home & Kitchen,43.97
+PRD-0184,SKU-0184,Beauty & Personal Care,61.46
+PRD-0185,SKU-0185,Sports & Outdoors,78.95
+PRD-0186,SKU-0186,Electronics,96.44
+PRD-0187,SKU-0187,Apparel,113.93
+PRD-0188,SKU-0188,Home & Kitchen,131.42
+PRD-0189,SKU-0189,Beauty & Personal Care,148.91
+PRD-0190,SKU-0190,Sports & Outdoors,161.5
+PRD-0191,SKU-0191,Electronics,178.99
+PRD-0192,SKU-0192,Apparel,196.48
+PRD-0193,SKU-0193,Home & Kitchen,213.97
+PRD-0194,SKU-0194,Beauty & Personal Care,231.46
+PRD-0195,SKU-0195,Sports & Outdoors,248.95
+PRD-0196,SKU-0196,Electronics,29.44
+PRD-0197,SKU-0197,Apparel,46.93
+PRD-0198,SKU-0198,Home & Kitchen,64.42
+PRD-0199,SKU-0199,Beauty & Personal Care,81.91
+PRD-0200,SKU-0200,Sports & Outdoors,94.5
+PRD-0201,SKU-0201,Electronics,111.99
+PRD-0202,SKU-0202,Apparel,129.48
+PRD-0203,SKU-0203,Home & Kitchen,146.97
+PRD-0204,SKU-0204,Beauty & Personal Care,164.46
+PRD-0205,SKU-0205,Sports & Outdoors,181.95
+PRD-0206,SKU-0206,Electronics,199.44
+PRD-0207,SKU-0207,Apparel,216.93
+PRD-0208,SKU-0208,Home & Kitchen,234.42
+PRD-0209,SKU-0209,Beauty & Personal Care,251.91
+PRD-0210,SKU-0210,Sports & Outdoors,27.5
+PRD-0211,SKU-0211,Electronics,44.99
+PRD-0212,SKU-0212,Apparel,62.48
+PRD-0213,SKU-0213,Home & Kitchen,79.97
+PRD-0214,SKU-0214,Beauty & Personal Care,97.46
+PRD-0215,SKU-0215,Sports & Outdoors,114.95
+PRD-0216,SKU-0216,Electronics,132.44
+PRD-0217,SKU-0217,Apparel,149.93
+PRD-0218,SKU-0218,Home & Kitchen,167.42
+PRD-0219,SKU-0219,Beauty & Personal Care,184.91
+PRD-0220,SKU-0220,Sports & Outdoors,197.5
+PRD-0221,SKU-0221,Electronics,214.99
+PRD-0222,SKU-0222,Apparel,232.48
+PRD-0223,SKU-0223,Home & Kitchen,249.97
+PRD-0224,SKU-0224,Beauty & Personal Care,30.46
+PRD-0225,SKU-0225,Sports & Outdoors,47.95
+PRD-0226,SKU-0226,Electronics,65.44
+PRD-0227,SKU-0227,Apparel,82.93
+PRD-0228,SKU-0228,Home & Kitchen,100.42
+PRD-0229,SKU-0229,Beauty & Personal Care,117.91
+PRD-0230,SKU-0230,Sports & Outdoors,130.5
+PRD-0231,SKU-0231,Electronics,147.99
+PRD-0232,SKU-0232,Apparel,165.48
+PRD-0233,SKU-0233,Home & Kitchen,182.97
+PRD-0234,SKU-0234,Beauty & Personal Care,200.46
+PRD-0235,SKU-0235,Sports & Outdoors,217.95
+PRD-0236,SKU-0236,Electronics,235.44
+PRD-0237,SKU-0237,Apparel,15.93
+PRD-0238,SKU-0238,Home & Kitchen,33.42
+PRD-0239,SKU-0239,Beauty & Personal Care,50.91
+PRD-0240,SKU-0240,Sports & Outdoors,63.5
+PRD-0241,SKU-0241,Electronics,80.99
+PRD-0242,SKU-0242,Apparel,98.48
+PRD-0243,SKU-0243,Home & Kitchen,115.97
+PRD-0244,SKU-0244,Beauty & Personal Care,133.46
+PRD-0245,SKU-0245,Sports & Outdoors,150.95
+PRD-0246,SKU-0246,Electronics,168.44
+PRD-0247,SKU-0247,Apparel,185.93
+PRD-0248,SKU-0248,Home & Kitchen,203.42
+PRD-0249,SKU-0249,Beauty & Personal Care,220.91
+PRD-0250,SKU-0250,Sports & Outdoors,233.5

@@ -34,4 +34,3 @@ def init_db(bind_engine: Engine | None = None) -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     init_db()
-

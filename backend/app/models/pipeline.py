@@ -70,4 +70,3 @@ class FreshnessCheck(Base):
     # Relationships
     scenario: Mapped[Scenario] = relationship("Scenario", back_populates="freshness_checks")
     dataset: Mapped[Dataset] = relationship("Dataset", back_populates="freshness_checks")
-

@@ -27,7 +27,7 @@ This document is the single source of truth for implementation tracking across e
 | `T01` | Backend Scaffolding, Tooling & Base Configuration | None | `COMPLETED` | `pytest` 5 passed; `ruff` and `mypy` 0 errors; `/health` returns 200 OK |
 | `T02` | Frontend Scaffolding, Tooling & Lux Purple Tokens | None | `COMPLETED` | `vitest` 6 passed; `tsc` & `eslint` 0 errors; production build verified |
 | `T03` | Relational Database Schema & SQLite Persistence Engine | `T01` | `COMPLETED` | `pytest` 14 passed (9 db integration); `ruff` & `mypy` 0 errors; WAL mode, all 11 tables, indices, and cascades verified |
-| `T04` | Bundled Signature Fixtures & Scenario Metadata Definition | None | `NOT_STARTED` | — |
+| `T04` | Bundled Signature Fixtures & Scenario Metadata Definition | None | `COMPLETED` | `pytest tests/unit/test_fixtures.py` 8 passed; 1,250 orders, 3,420 items, 250 prods, 250 inv; 15 dups, 24 orphaned, 8 neg inv, 1 temporal gap verified |
 | `T05` | Dataset Ingestion, Scenario Loader & Upload Security Service | `T01`, `T03`, `T04` | `NOT_STARTED` | — |
 | `T06` | Validation Rule Framework & Core Rule Evaluators | `T01`, `T03` | `NOT_STARTED` | — |
 | `T07` | Relational, Temporal & Schema Rule Evaluators | `T06` | `NOT_STARTED` | — |
@@ -53,10 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestone **M0** (`T01`, `T02`) is `COMPLETED`. Milestone **M1** is `IN_PROGRESS` with `T03` (Relational Database Schema & SQLite Persistence Engine) completed and verified.
+- **Current State:** Milestone **M0** (`T01`, `T02`) is `COMPLETED`. Milestone **M1** is `IN_PROGRESS` with `T03` (Relational Database Schema & SQLite Persistence Engine) and `T04` (Bundled Signature Fixtures & Scenario Metadata Definition) `COMPLETED` and verified.
 - **Next Eligible Tasks:**
-  - `T04` (Bundled Signature Fixtures & Scenario Metadata Definition) — Independent prerequisite-free data task.
-  - Completing `T04` will unlock `T05` (Dataset Ingestion, Scenario Loader & Upload Security Service), completing Milestone **M1**.
+  - `T05` (Dataset Ingestion, Scenario Loader & Upload Security Service) — Prerequisites satisfied (`T01`, `T03`, `T04`). Completing `T05` will mark Milestone **M1** as `COMPLETED`.
 
 ---
 
@@ -121,3 +120,32 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && mypy app` -> Success: no issues found in 27 source files.
   - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 947ms (no regressions).
 - **Remaining Limitations:** None. SQLite persistence engine and ORM models are operational and ready for scenario fixtures and data ingestion (`T04` & `T05`).
+
+### `T04` — Bundled Signature Fixtures & Scenario Metadata Definition
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `data/scenarios/monday_revenue_mystery/`:
+    - `scenario.json`: Complete scenario metadata, 4 dataset schemas (`orders`, `order_items`, `products`, `inventory`), and 16-node lineage DAG with 14 edges matching `docs/data-model.md`. Verified strictly acyclic via NetworkX.
+    - `rules.json`: Declarative quality rules catalog including the 4 target defect rules (`VAL-ORD-001`, `VAL-ORD-002`, `VAL-INV-001`, `VAL-FRESH-001`) and 4 baseline passing rules (`VAL-ORD-003`, `VAL-PRD-001`, `VAL-PRD-002`, `VAL-INV-002`).
+    - `pipeline_history.json`: Historical pipeline runs tracking compute `COMPLETED_SUCCESS` alongside quality `CORRUPTED`, run logs, and partition freshness SLA checkpoints (`STALE` on defective orders).
+    - `defective/`:
+      - `orders.csv`: Exactly 1,250 rows; 15 duplicate order IDs; $142,000 revenue spike calibration; 4-hour temporal gap (0 orders between Sunday 18:00 and 22:00 UTC).
+      - `order_items.csv`: Exactly 3,420 rows; exactly 24 orphaned items referencing non-existent product IDs (`PRD-9001` through `PRD-9024`).
+      - `products.csv`: Exactly 250 rows with unique `product_id` and positive prices.
+      - `inventory.csv`: Exactly 250 rows; exactly 8 SKUs with negative `quantity_on_hand`.
+    - `corrected/`:
+      - `orders.csv`: Exactly 1,250 rows; 0 duplicate order IDs (1,250 unique IDs); Sunday 18:00–22:00 UTC temporal gap resolved with 15 regular orders.
+      - `order_items.csv`: Exactly 3,420 rows; 0 orphaned items (all referencing valid `product_id`).
+      - `products.csv`: Exactly 250 rows with unique `product_id`.
+      - `inventory.csv`: Exactly 250 rows; 0 negative inventory rows (`quantity_on_hand >= 0`).
+      - `pipeline_history.json`: Successful run reflecting `HEALTHY` quality dimension and `FRESH` partition SLA.
+  - `backend/app/services/ingestion/scenario_fixtures.py`: Deterministic generator script using seed 42 to synthesize and output all CSV and JSON fixtures with UTF-8 encoding, LF line endings, and no BOM.
+  - `backend/tests/unit/test_fixtures.py`: Comprehensive 8-test unit suite verifying file encoding, LF line endings, metadata schemas, lineage DAG acyclicity, pipeline history, exact row counts, defective fixture anomalies, corrected fixture recovery, and generator determinism.
+- **Verification Evidence:**
+  - `cd backend && pytest tests/unit/test_fixtures.py -v` -> 8 passed in 1.18s.
+  - `cd backend && pytest -v` -> 22 passed in 2.17s (5 health + 9 db integration + 8 fixtures unit).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 37 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 28 source files.
+  - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 881ms (no regressions).
+- **Remaining Limitations:** None. Fixtures and metadata are generated, verified, and ready for ingestion service loading (`T05`).

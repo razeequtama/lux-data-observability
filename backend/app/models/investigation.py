@@ -85,4 +85,3 @@ class ReportArtifact(Base):
     validation_run: Mapped[ValidationRun] = relationship(
         "ValidationRun", back_populates="report_artifacts"
     )
-

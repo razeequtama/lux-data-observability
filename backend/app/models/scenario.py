@@ -74,4 +74,3 @@ class Scenario(Base):
     report_artifacts: Mapped[list[ReportArtifact]] = relationship(
         "ReportArtifact", back_populates="scenario", cascade="all, delete-orphan"
     )
-
