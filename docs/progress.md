@@ -8,7 +8,7 @@ This document is the single source of truth for implementation tracking across e
 
 | Milestone | Description | Tasks | Status |
 |---|---|---|---|
-| **M0** | Core Foundation, Tooling & Scaffolding | `T01`, `T02` | `NOT_STARTED` |
+| **M0** | Core Foundation, Tooling & Scaffolding | `T01`, `T02` | `IN_PROGRESS` |
 | **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `NOT_STARTED` |
 | **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `NOT_STARTED` |
 | **M3** | Lineage Graph & Downstream Impact Analysis | `T09`, `T10`, `T11` | `NOT_STARTED` |
@@ -24,7 +24,7 @@ This document is the single source of truth for implementation tracking across e
 
 | Task ID | Task Title | Prerequisites | Status | Verification Summary |
 |---|---|---|---|---|
-| `T01` | Backend Scaffolding, Tooling & Base Configuration | None | `NOT_STARTED` | — |
+| `T01` | Backend Scaffolding, Tooling & Base Configuration | None | `COMPLETED` | `pytest` 5 passed; `ruff` and `mypy` 0 errors; `/health` returns 200 OK |
 | `T02` | Frontend Scaffolding, Tooling & Lux Purple Tokens | None | `NOT_STARTED` | — |
 | `T03` | Relational Database Schema & SQLite Persistence Engine | `T01` | `NOT_STARTED` | — |
 | `T04` | Bundled Signature Fixtures & Scenario Metadata Definition | None | `NOT_STARTED` | — |
@@ -53,7 +53,32 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Planning phase completed. Architecture, schemas, API contracts, security policies, test strategies, and task specifications are established and documented.
-- **Next Step:** Awaiting human approval to begin feature implementation.
-- **Recommended First Task:** `T01` (Backend Scaffolding, Tooling & Base Configuration).
+- **Current State:** `T01` (Backend Scaffolding, Tooling & Base Configuration) is completed. FastAPI backend structure, Pydantic v2 settings, standard error envelopes, health endpoints, Ruff, Mypy, and Pytest harnesses are operational.
+- **Next Eligible Tasks:**
+  - `T02` (Frontend Scaffolding, Tooling & Lux Purple Theme Tokens) — Independent, unblocks frontend milestone.
+  - `T03` (Relational Database Schema & SQLite Persistence Engine) — Prerequisites met (`T01`).
+  - `T04` (Bundled Signature Fixtures & Scenario Metadata Definition) — Independent prerequisite-free data task.
+
+---
+
+## 4. Completed Task Verification Log
+
+### `T01` — Backend Scaffolding, Tooling & Base Configuration
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/pyproject.toml` with pinned dependencies (`fastapi>=0.115.0`, `uvicorn[standard]>=0.28.0`, `pydantic>=2.10.0`, `pydantic-settings>=2.2.0`, `sqlalchemy>=2.0.0`, `networkx>=3.0`, `jinja2>=3.1.0`, `python-multipart>=0.0.9`, `httpx>=0.27.0`) and dev dependencies (`ruff`, `mypy`, `pytest`, `pytest-asyncio`).
+  - `backend/app/main.py` entrypoint with CORS middleware, lifespan runtime directories setup, and `/health` + `/api/v1/health` endpoints.
+  - `backend/app/core/config.py` with `pydantic-settings` `Settings` class managing `LUX_` environment variables and directory resolutions.
+  - `backend/app/core/errors.py` with custom exception taxonomy (`LuxException`, `NotFoundError`, `PayloadTooLargeError`) and centralized error response handlers matching the API contract standard envelope.
+  - `backend/app/schemas/common.py` with `HealthResponse`, `ErrorResponse`, and `ErrorDetail` schemas.
+  - Full modular monolith package layout for `api`, `core`, `db`, `models`, `schemas`, `services/{ingestion,validation,lineage,impact,pipeline,reports}`, and `storage`.
+  - Base pytest suite in `backend/tests/test_health.py` and `backend/tests/conftest.py`.
+  - Repository `.gitignore` preventing build artifacts and temporary files from being tracked.
+- **Verification Evidence:**
+  - `cd backend && pytest -v` -> 5 passed in 0.14s (`test_health_check_returns_200`, `test_api_v1_health_check_returns_200`, `test_error_envelope_on_404`, `test_cors_headers_on_preflight`, `test_async_health_check`).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 25 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 18 source files.
+- **Remaining Limitations:** None. Backend scaffolding is verified and ready for database schema implementation (`T03`).
+
 

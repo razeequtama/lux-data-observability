@@ -38,6 +38,7 @@ A task is **Done** only when:
 ## 3. Detailed Implementation Backlog
 
 ### Task T01: Backend Scaffolding, Tooling & Base Configuration
+- **Status:** COMPLETED
 - **Objective:** Establish the Python backend application skeleton with FastAPI, Pydantic v2, Ruff linter, Mypy type checker, and Pytest test harness.
 - **Prerequisites:** None.
 - **In-Scope:**

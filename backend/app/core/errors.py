@@ -1,0 +1,154 @@
+"""Custom exceptions and centralized error envelope handlers."""
+
+import logging
+from datetime import UTC, datetime
+from typing import Any
+
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+logger = logging.getLogger("lux.errors")
+
+
+class LuxException(Exception):
+    """Base application exception for Lux with structured code and details."""
+
+    def __init__(
+        self,
+        code: str,
+        message: str,
+        status_code: int = status.HTTP_400_BAD_REQUEST,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        self.code = code
+        self.message = message
+        self.status_code = status_code
+        self.details = details or {}
+        super().__init__(message)
+
+
+class NotFoundError(LuxException):
+    """Resource not found exception."""
+
+    def __init__(
+        self,
+        code: str = "RESOURCE_NOT_FOUND",
+        message: str = "The requested resource was not found.",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            code=code,
+            message=message,
+            status_code=status.HTTP_404_NOT_FOUND,
+            details=details,
+        )
+
+
+class PayloadTooLargeError(LuxException):
+    """Payload exceeds allowed limit."""
+
+    def __init__(
+        self,
+        code: str = "PAYLOAD_TOO_LARGE",
+        message: str = "Uploaded file exceeds maximum allowed limit (20MB).",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            code=code,
+            message=message,
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            details=details,
+        )
+
+
+def format_error_payload(
+    code: str,
+    message: str,
+    details: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Format payload conforming to Lux standard error envelope."""
+    return {
+        "error": {
+            "code": code,
+            "message": message,
+            "details": details or {},
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+    }
+
+
+async def lux_exception_handler(_: Request, exc: LuxException) -> JSONResponse:
+    """Handle custom Lux exceptions."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=format_error_payload(code=exc.code, message=exc.message, details=exc.details),
+    )
+
+
+async def http_exception_handler(_: Request, exc: StarletteHTTPException) -> JSONResponse:
+    """Handle standard Starlette / FastAPI HTTP exceptions."""
+    detail: object = exc.detail
+    code = "HTTP_ERROR"
+    details: dict[str, Any] = {}
+    message: str
+
+    if isinstance(detail, dict):
+        code = str(detail.get("code", code))
+        message = str(detail.get("message", str(detail)))
+        raw_details = detail.get("details")
+        if isinstance(raw_details, dict):
+            details = raw_details
+    elif isinstance(detail, str):
+        message = detail
+        if exc.status_code == status.HTTP_404_NOT_FOUND:
+            code = "NOT_FOUND"
+        elif exc.status_code == status.HTTP_403_FORBIDDEN:
+            code = "FORBIDDEN"
+        elif exc.status_code == status.HTTP_401_UNAUTHORIZED:
+            code = "UNAUTHORIZED"
+        elif exc.status_code == status.HTTP_400_BAD_REQUEST:
+            code = "BAD_REQUEST"
+        elif exc.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE:
+            code = "PAYLOAD_TOO_LARGE"
+    else:
+        message = str(detail)
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=format_error_payload(code=code, message=message, details=details),
+    )
+
+
+async def validation_exception_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
+    """Handle FastAPI / Pydantic request validation errors."""
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content=format_error_payload(
+            code="VALIDATION_ERROR",
+            message="Request validation failed.",
+            details={"errors": exc.errors()},
+        ),
+    )
+
+
+async def generic_exception_handler(_: Request, exc: Exception) -> JSONResponse:
+    """Catch-all handler for unhandled internal server errors."""
+    logger.exception("Unhandled exception occurred: %s", exc)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content=format_error_payload(
+            code="INTERNAL_SERVER_ERROR",
+            message="An unexpected server error occurred.",
+            details={},
+        ),
+    )
+
+
+def register_error_handlers(app: FastAPI) -> None:
+    """Register all centralized error handlers on the FastAPI application."""
+    app.add_exception_handler(LuxException, lux_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(StarletteHTTPException, http_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RequestValidationError, validation_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(Exception, generic_exception_handler)
