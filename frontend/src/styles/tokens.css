@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Lux Purple Brand Palette */
+  --lux-purple-50: #FAF5FF;
+  --lux-purple-100: #F3E8FF;
+  --lux-purple-200: #E9D5FF;
+  --lux-purple-300: #D8B4FE;
+  --lux-purple-400: #C084FC;
+  --lux-purple-500: #A855F7;
+  --lux-purple-600: #7C3AED; /* Hover state */
+  --lux-purple-700: #6B46C1; /* Primary Brand Base */
+  --lux-purple-800: #553C9A; /* Active / Pressed state */
+  --lux-purple-900: #44337A;
+  --lux-purple-950: #2E1065;
+
+  /* High-Contrast Dark Slate Backgrounds & Surfaces */
+  --lux-bg-dark: #0F172A;      /* Dark slate canvas */
+  --lux-surface-dark: #1E293B; /* Card & panel surface */
+  --lux-border-dark: #334155;  /* Subtle divider/border */
+  --lux-canvas-light: #F8FAFC; /* Light canvas alternative */
+
+  /* Semantic Status Tokens (Always paired with icons and descriptive text) */
+  --lux-status-healthy: #10B981;   /* Success / Clean */
+  --lux-status-warning: #F59E0B;   /* Degraded / Warning */
+  --lux-status-corrupted: #F43F5E; /* Failed / Corrupted */
+  --lux-status-neutral: #64748B;   /* Unvalidated / Inactive */
+}
+
+/* Accessibility Focus Ring Defaults */
+*:focus-visible {
+  outline: 2px solid var(--lux-purple-500);
+  outline-offset: 2px;
+}
+
+/* Base Body Styles */
+body {
+  margin: 0;
+  background-color: var(--lux-bg-dark);
+  color: #F8FAFC;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+

@@ -8,7 +8,7 @@ This document is the single source of truth for implementation tracking across e
 
 | Milestone | Description | Tasks | Status |
 |---|---|---|---|
-| **M0** | Core Foundation, Tooling & Scaffolding | `T01`, `T02` | `IN_PROGRESS` |
+| **M0** | Core Foundation, Tooling & Scaffolding | `T01`, `T02` | `COMPLETED` |
 | **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `NOT_STARTED` |
 | **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `NOT_STARTED` |
 | **M3** | Lineage Graph & Downstream Impact Analysis | `T09`, `T10`, `T11` | `NOT_STARTED` |
@@ -25,7 +25,7 @@ This document is the single source of truth for implementation tracking across e
 | Task ID | Task Title | Prerequisites | Status | Verification Summary |
 |---|---|---|---|---|
 | `T01` | Backend Scaffolding, Tooling & Base Configuration | None | `COMPLETED` | `pytest` 5 passed; `ruff` and `mypy` 0 errors; `/health` returns 200 OK |
-| `T02` | Frontend Scaffolding, Tooling & Lux Purple Tokens | None | `NOT_STARTED` | — |
+| `T02` | Frontend Scaffolding, Tooling & Lux Purple Tokens | None | `COMPLETED` | `vitest` 6 passed; `tsc` & `eslint` 0 errors; production build verified |
 | `T03` | Relational Database Schema & SQLite Persistence Engine | `T01` | `NOT_STARTED` | — |
 | `T04` | Bundled Signature Fixtures & Scenario Metadata Definition | None | `NOT_STARTED` | — |
 | `T05` | Dataset Ingestion, Scenario Loader & Upload Security Service | `T01`, `T03`, `T04` | `NOT_STARTED` | — |
@@ -53,9 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** `T01` (Backend Scaffolding, Tooling & Base Configuration) is completed. FastAPI backend structure, Pydantic v2 settings, standard error envelopes, health endpoints, Ruff, Mypy, and Pytest harnesses are operational.
+- **Current State:** `T01` (Backend Scaffolding) and `T02` (Frontend Scaffolding & Lux Purple Tokens) are completed. Milestone **M0** (Core Foundation, Tooling & Scaffolding) is 100% complete. Both backend and frontend development environments, test runners, linters, and type checkers are verified and operational.
 - **Next Eligible Tasks:**
-  - `T02` (Frontend Scaffolding, Tooling & Lux Purple Theme Tokens) — Independent, unblocks frontend milestone.
+
   - `T03` (Relational Database Schema & SQLite Persistence Engine) — Prerequisites met (`T01`).
   - `T04` (Bundled Signature Fixtures & Scenario Metadata Definition) — Independent prerequisite-free data task.
 
@@ -80,5 +80,25 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && ruff format --check .` -> 25 files already formatted.
   - `cd backend && mypy app` -> Success: no issues found in 18 source files.
 - **Remaining Limitations:** None. Backend scaffolding is verified and ready for database schema implementation (`T03`).
+
+### `T02` — Frontend Scaffolding, Tooling & Lux Purple Theme Tokens
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `frontend/package.json` with React 18 (`react`, `react-dom`), Vite, Lucide React icons, Tailwind CSS v3, TypeScript, ESLint 9, and Vitest test suite.
+  - `frontend/vite.config.ts` configuring `@/` path alias, `/api` proxy forwarding to backend (`http://localhost:8000`), port 3000, and Vitest jsdom test runner.
+  - `frontend/tsconfig.json` with strict mode, ES2022 target, bundler module resolution, path aliases, and Vitest DOM types.
+  - `frontend/tailwind.config.js` and `frontend/src/styles/tokens.css` defining the Lux Purple palette (`#6B46C1` primary, `#7C3AED` hover, `#553C9A` active, `#F3E8FF` subtle), dark slate surfaces (`#0F172A`, `#1E293B`, `#334155`), and accessible status tokens (Healthy `#10B981`, Warning `#F59E0B`, Corrupted `#F43F5E`, Neutral `#64748B`). Text on purple achieves WCAG AA & AAA contrast (6.44:1).
+  - `frontend/eslint.config.js` with modern flat configuration using `typescript-eslint` and React Hooks lint rules.
+  - `frontend/index.html` with dark slate base theme, SVG favicon, and meta viewport.
+  - `frontend/src/App.tsx` shell featuring Lux branding, active scenario badge ("Monday Revenue Mystery"), ADR-006 dual-dimension health badges (Compute: SUCCESS vs Quality: CORRUPTED), and semantic navigation tabs (`Validations`, `Lineage`, `Impact Analysis`, `Pipelines`, `Investigation`, `Recovery`).
+  - Directory structure layout matching `AGENTS.md` (`api`, `components/{common,lineage,validation,impact,reports}`, `hooks`, `types`).
+  - Vitest test suite in `frontend/tests/App.test.tsx` and `frontend/tests/setup.ts`.
+- **Verification Evidence:**
+  - `cd frontend && npm run typecheck` -> `tsc --noEmit` exited with code 0 (0 errors).
+  - `cd frontend && npm run lint` -> `eslint .` exited with code 0 (0 warnings/errors).
+  - `cd frontend && npm test` -> `vitest run` 6/6 tests passed in 513ms (`tests/App.test.tsx`).
+  - `cd frontend && npm test -- --run` -> `vitest run` 6/6 tests passed in 523ms (`tests/App.test.tsx`).
+  - `cd frontend && npm run build` -> `tsc && vite build` completed in 4.51s, generating optimized production bundle in `frontend/dist/`.
+- **Remaining Limitations:** None. Frontend foundation is operational and ready for feature view implementations.
 
 
