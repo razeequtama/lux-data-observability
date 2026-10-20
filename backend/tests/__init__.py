@@ -1,2 +1,1 @@
 """Lux test suite."""
-

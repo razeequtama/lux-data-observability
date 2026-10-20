@@ -1,2 +1,1 @@
 """Downstream impact analysis service."""
-

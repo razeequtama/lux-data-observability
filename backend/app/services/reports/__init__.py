@@ -1,2 +1,1 @@
 """Incident report generator service."""
-

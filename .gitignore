@@ -41,10 +41,10 @@ htmlcov/
 # Node & Frontend
 node_modules/
 dist/
+.vite/
 
 # Lux runtime ephemeral data & databases
 data/lux.db*
 data/uploads/
 data/artifacts/
 !data/scenarios/
-

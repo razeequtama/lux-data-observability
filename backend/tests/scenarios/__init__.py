@@ -1,2 +1,1 @@
 """Scenario verification tests."""
-

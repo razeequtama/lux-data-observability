@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.errors import register_error_handlers
+from app.db.init_db import init_db
 from app.schemas.common import HealthResponse
 
 
@@ -19,6 +20,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     settings.scenarios_dir.mkdir(parents=True, exist_ok=True)
     settings.uploads_dir.mkdir(parents=True, exist_ok=True)
     settings.artifacts_dir.mkdir(parents=True, exist_ok=True)
+    # Initialize database tables
+    init_db()
     yield
 
 

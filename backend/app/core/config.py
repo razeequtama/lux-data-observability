@@ -32,6 +32,10 @@ class Settings(BaseSettings):
         default=DEFAULT_DATA_DIR,
         description="Root path for data files, scenarios, and artifacts",
     )
+    database_url: str | None = Field(
+        default=None,
+        description="Database connection URL. If None, derived from sqlite_db_path",
+    )
     cors_origins: list[str] = Field(
         default_factory=lambda: [
             "http://localhost:3000",
@@ -81,6 +85,13 @@ class Settings(BaseSettings):
         """Path to SQLite database file."""
         return self.data_dir / "lux.db"
 
+    @property
+    def db_url(self) -> str:
+        """SQLAlchemy database connection URL."""
+        if self.database_url:
+            return self.database_url
+        return f"sqlite:///{self.sqlite_db_path.resolve()}"
+
 
 @lru_cache
 def get_settings() -> Settings:
@@ -89,4 +100,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-

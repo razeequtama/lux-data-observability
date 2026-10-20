@@ -9,9 +9,9 @@ This document is the single source of truth for implementation tracking across e
 | Milestone | Description | Tasks | Status |
 |---|---|---|---|
 | **M0** | Core Foundation, Tooling & Scaffolding | `T01`, `T02` | `COMPLETED` |
-| **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `NOT_STARTED` |
+| **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `IN_PROGRESS` |
 | **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `NOT_STARTED` |
-| **M3** | Lineage Graph & Downstream Impact Analysis | `T09`, `T10`, `T11` | `NOT_STARTED` |
+| **M3** | Lineage DAG Domain Engine & Graph Integrity Validator | `T09`, `T10`, `T11` | `NOT_STARTED` |
 | **M4** | Pipeline Observability & Run History | `T12`, `T13` | `NOT_STARTED` |
 | **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `NOT_STARTED` |
 | **M6** | Frontend "Trace the Failure" Interactive UI | `T16`, `T17`, `T18`, `T19`, `T20` | `NOT_STARTED` |
@@ -26,7 +26,7 @@ This document is the single source of truth for implementation tracking across e
 |---|---|---|---|---|
 | `T01` | Backend Scaffolding, Tooling & Base Configuration | None | `COMPLETED` | `pytest` 5 passed; `ruff` and `mypy` 0 errors; `/health` returns 200 OK |
 | `T02` | Frontend Scaffolding, Tooling & Lux Purple Tokens | None | `COMPLETED` | `vitest` 6 passed; `tsc` & `eslint` 0 errors; production build verified |
-| `T03` | Relational Database Schema & SQLite Persistence Engine | `T01` | `NOT_STARTED` | — |
+| `T03` | Relational Database Schema & SQLite Persistence Engine | `T01` | `COMPLETED` | `pytest` 14 passed (9 db integration); `ruff` & `mypy` 0 errors; WAL mode, all 11 tables, indices, and cascades verified |
 | `T04` | Bundled Signature Fixtures & Scenario Metadata Definition | None | `NOT_STARTED` | — |
 | `T05` | Dataset Ingestion, Scenario Loader & Upload Security Service | `T01`, `T03`, `T04` | `NOT_STARTED` | — |
 | `T06` | Validation Rule Framework & Core Rule Evaluators | `T01`, `T03` | `NOT_STARTED` | — |
@@ -53,11 +53,10 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** `T01` (Backend Scaffolding) and `T02` (Frontend Scaffolding & Lux Purple Tokens) are completed. Milestone **M0** (Core Foundation, Tooling & Scaffolding) is 100% complete. Both backend and frontend development environments, test runners, linters, and type checkers are verified and operational.
+- **Current State:** Milestone **M0** (`T01`, `T02`) is `COMPLETED`. Milestone **M1** is `IN_PROGRESS` with `T03` (Relational Database Schema & SQLite Persistence Engine) completed and verified.
 - **Next Eligible Tasks:**
-
-  - `T03` (Relational Database Schema & SQLite Persistence Engine) — Prerequisites met (`T01`).
   - `T04` (Bundled Signature Fixtures & Scenario Metadata Definition) — Independent prerequisite-free data task.
+  - Completing `T04` will unlock `T05` (Dataset Ingestion, Scenario Loader & Upload Security Service), completing Milestone **M1**.
 
 ---
 
@@ -101,4 +100,24 @@ This document is the single source of truth for implementation tracking across e
   - `cd frontend && npm run build` -> `tsc && vite build` completed in 4.51s, generating optimized production bundle in `frontend/dist/`.
 - **Remaining Limitations:** None. Frontend foundation is operational and ready for feature view implementations.
 
-
+### `T03` — Relational Database Schema & SQLite Persistence Engine
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/models/`: SQLAlchemy 2.0 ORM models for all 11 domain entities:
+    - `Scenario` (`backend/app/models/scenario.py`): Scenario metadata, fixture version, timestamps, bidirectional relationships with cascades.
+    - `Dataset` (`backend/app/models/dataset.py`): File location, format, record counts, schema definition JSON, index `idx_datasets_scenario`.
+    - `ValidationRule`, `ValidationRun`, `ValidationFinding` (`backend/app/models/validation.py`): Rule configurations, runs with duration & status counts, granular findings with affected fields, evidence JSON, and declared indices.
+    - `LineageNode`, `LineageEdge` (`backend/app/models/lineage.py`): Directed DAG nodes with metadata mapped to DB column `metadata` (aliased as `node_metadata` to avoid `DeclarativeBase.metadata` conflict), directional edges, indices `idx_nodes_scenario`, `idx_edges_scenario`, `idx_edges_source`, `idx_edges_target`.
+    - `PipelineRun`, `FreshnessCheck` (`backend/app/models/pipeline.py`): Pipeline compute execution status vs data quality dimension tracking, duration, step logs, partition freshness SLA checkpoints.
+    - `Investigation`, `ReportArtifact` (`backend/app/models/investigation.py`): Incident workspace facts/hypotheses/remediation, initial finding linkage, and generated JSON/HTML reports with sha256 checksums.
+  - `backend/app/db/session.py`: Database engine with SQLite connection event listener enforcing `PRAGMA journal_mode=WAL;`, `PRAGMA foreign_keys=ON;`, and `PRAGMA busy_timeout=5000;`. Provided `SessionLocal` factory and `get_db` FastAPI dependency.
+  - `backend/app/db/init_db.py`: Database initialization utility creating all 11 tables and indices, ensuring data directories exist, and wired into FastAPI lifespan startup hook.
+  - `backend/tests/integration/test_db.py`: Comprehensive 9-test integration suite verifying SQLite pragmas (WAL mode, FKs, busy timeout), all 11 tables and indices, CRUD across all entities, foreign key constraint enforcement, scenario cascade deletes, dataset cascade deletes and `SET NULL` on lineage nodes, finding deletion `SET NULL` on investigations, and report artifact cascade deletes.
+- **Verification Evidence:**
+  - `cd backend && pytest tests/integration/test_db.py -v` -> 9 passed in 1.19s.
+  - `cd backend && pytest -v` -> 14 passed in 1.10s (5 health tests + 9 database integration tests).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 35 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 27 source files.
+  - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 947ms (no regressions).
+- **Remaining Limitations:** None. SQLite persistence engine and ORM models are operational and ready for scenario fixtures and data ingestion (`T04` & `T05`).
