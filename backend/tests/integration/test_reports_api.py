@@ -347,4 +347,3 @@ def test_path_traversal_protection(
             db=db_session, report_id="rep_malicious", export_format="json"
         )
     assert exc_info.value.code == "PATH_TRAVERSAL_DETECTED"
-

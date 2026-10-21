@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import App from '../src/App';
 import * as scenariosApi from '../src/api/scenarios';
 import * as datasetsApi from '../src/api/datasets';
+import * as validationsApi from '../src/api/validations';
+import * as lineageApi from '../src/api/lineage';
 
 describe('Lux App Shell Component', () => {
   const mockScenarios = [
@@ -43,6 +45,27 @@ describe('Lux App Shell Component', () => {
     vi.restoreAllMocks();
     vi.spyOn(scenariosApi, 'listScenarios').mockResolvedValue(mockScenarios);
     vi.spyOn(datasetsApi, 'listDatasets').mockResolvedValue(mockDatasets);
+    vi.spyOn(validationsApi, 'listValidationRuns').mockResolvedValue([]);
+    vi.spyOn(validationsApi, 'listValidationFindings').mockResolvedValue({
+      run_id: 'val_run_mock',
+      total_findings: 0,
+      items: [],
+    });
+    vi.spyOn(lineageApi, 'getLineageGraph').mockResolvedValue({
+      scenario_id: 'monday_revenue_mystery',
+      nodes: [
+        {
+          id: 'src_orders',
+          name: 'orders.csv',
+          type: 'SOURCE_DATASET',
+          position: { x: 50, y: 100 },
+          execution_status: 'COMPLETED_SUCCESS',
+          quality_health: 'CORRUPTED',
+          data: { label: 'orders.csv', type: 'SOURCE_DATASET' },
+        },
+      ],
+      edges: [],
+    });
   });
 
   afterEach(() => {
@@ -124,6 +147,7 @@ describe('Lux App Shell Component', () => {
     expect(lineageTab).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('heading', { level: 1, name: /lineage/i })).toBeInTheDocument();
     expect(screen.getByText(/interactive directed acyclic graph/i)).toBeInTheDocument();
+    expect(await screen.findByTestId('lineage-dag-container')).toBeInTheDocument();
 
     // Switch to Recovery tab
     const recoveryTab = screen.getByRole('tab', { name: /recovery/i });

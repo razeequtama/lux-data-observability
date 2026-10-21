@@ -40,8 +40,8 @@ This document is the single source of truth for implementation tracking across e
 | `T14` | Investigation Workspace Engine & Schema Integration | `T03`, `T08`, `T10` | `COMPLETED` | `pytest tests/integration/test_investigations_api.py` 9 passed; full `pytest` 218 passed; `ruff` & `mypy` 0 errors; verified facts, hypotheses, and action items persisted; fact-hypothesis boundary enforced; empty action items handled cleanly |
 | `T15` | Safe Report Generator Service (JSON & HTML with CSP) | `T14` | `COMPLETED` | `pytest tests/unit/test_report_sanitization.py tests/integration/test_reports_api.py` 17 passed; full `pytest` 235 passed; `ruff` & `mypy` 0 errors; XSS autoescape, CSP header, SHA-256 integrity, inlined Lux Purple CSS, native `<details>` evidence panels, and JSON/HTML export verified |
 | `T16` | Frontend Navigation Shell, Scenario Switcher & Dataset Inspector | `T02`, `T05` | `COMPLETED` | `vitest` 34 passed (6 test files); `tsc` & `eslint` 0 errors; production build verified (186.84 kB); scenario switcher, dataset inspector, paginated preview modal, and drag-and-drop upload with 20MB limit verified |
-| `T17` | Quality Validation Findings Explorer & Evidence Drawer UI | `T08`, `T16` | `NOT_STARTED` | — |
-| `T18` | Interactive Lineage DAG & Blast Radius Visualization UI | `T11`, `T16` | `NOT_STARTED` | — |
+| `T17` | Quality Validation Findings Explorer & Evidence Drawer UI | `T08`, `T16` | `COMPLETED` | `vitest` 62 passed (11 test files); `tsc` & `eslint` 0 errors; production build verified (229.35 kB); summary cards, severity/status filters, CRITICAL isolation of duplicate orders, slide-over evidence drawer with focus trap & sample row line numbers, and Trace Impact action verified |
+| `T18` | Interactive Lineage DAG & Blast Radius Visualization UI | `T11`, `T16` | `COMPLETED` | `vitest` 83 passed (15 test files); `tsc` & `eslint` 0 errors; production build verified (451.95 kB); all 16 nodes rendered with Dagre coordinates, custom dual-status chips (Compute Exit 0 vs Quality Corrupted), selecting src_orders highlights downstream blast radius through to report_exec_dash, and NodeDetailsPanel verified |
 | `T19` | Pipeline Observability, Freshness & Run History UI | `T12`, `T13`, `T16` | `NOT_STARTED` | — |
 | `T20` | Investigation Workspace & Report Export Modal UI | `T15`, `T17`, `T18` | `NOT_STARTED` | — |
 | `T21` | Recovery Verification Backend Engine | `T08`, `T10`, `T12` | `NOT_STARTED` | — |
@@ -53,9 +53,10 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), and **M5** (`T14`, `T15`) are `COMPLETED`. Milestone **M6** is `IN_PROGRESS` with `T16` `COMPLETED`.
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), and **M5** (`T14`, `T15`) are `COMPLETED`. Milestone **M6** is `IN_PROGRESS` with `T16`, `T17`, and `T18` `COMPLETED`.
 - **Next Eligible Tasks:**
-  - `T17` (Quality Validation Findings Explorer & Evidence Drawer UI) — Prerequisites satisfied (`T08`, `T16`). Continues Milestone **M6** (Frontend "Trace the Failure" Interactive UI).
+  - `T19` (Pipeline Observability, Freshness & Run History UI) — Prerequisites satisfied (`T12`, `T13`, `T16`). Continues Milestone **M6** (Frontend "Trace the Failure" Interactive UI).
+  - `T20` (Investigation Workspace & Report Export Modal UI) — Prerequisites satisfied (`T15`, `T17`, `T18`). Continues Milestone **M6**.
 
 ---
 
@@ -579,6 +580,122 @@ This document is the single source of truth for implementation tracking across e
   - `cd frontend && npm run build` (`tsc && vite build`) -> Built production assets in `frontend/dist/` in 7.56s (HTML 1.01 kB, CSS 22.94 kB, JS 186.84 kB).
   - `cd backend && pytest` -> 235 passed in 17.99s (no regressions).
 - **Remaining Limitations:** None. Frontend foundation, navigation, scenario switcher, and dataset inspector are fully operational. Ready for `T17` (Quality Validation Findings Explorer & Evidence Drawer UI).
+
+### `T17` — Quality Validation Findings Explorer & Evidence Drawer UI
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `frontend/src/types/`:
+    - `validation.ts`: TypeScript models matching backend schemas: `RuleCategory`, `RuleSeverity`, `RuleStatus`, `ValidationRunResponse`, `DuplicateRowEvidence`, `ViolationRowEvidence`, `FindingEvidence`, `ValidationFindingItem`, `ValidationFindingsListResponse`, and `ValidationFilterParams`.
+    - `index.ts`: Re-export all validation types.
+  - `frontend/src/api/`:
+    - `validations.ts`: Typed REST API client:
+      - `executeValidationRun(scenarioId, datasetIds?)`: Dispatches `POST /api/v1/validations/run`.
+      - `getValidationRun(runId)`: Fetches `GET /api/v1/validations/runs/{run_id}`.
+      - `listValidationRuns(scenarioId?, limit?, offset?)`: Fetches `GET /api/v1/validations/runs`.
+      - `listValidationFindings(runId, options?)`: Fetches `GET /api/v1/validations/runs/{run_id}/findings` with server-side query filters.
+    - `index.ts`: Re-export validations API functions.
+  - `frontend/src/components/validation/`:
+    - `ValidationSummaryCards.tsx`: Top meta bar (Run ID, active fixture version, run status badge, execution timestamp) and 5 KPI cards (Total Checks, Passed Checks with emerald theme, Failed Checks with rose theme, Warnings with amber theme, and Execution Duration in milliseconds).
+    - `FindingsTable.tsx`: Filterable findings explorer supporting:
+      - Severity filter (`ALL`, `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`).
+      - Status filter (`ALL`, `FAILED`, `WARNING`, `PASSED`).
+      - Dataset filter (`ALL` or specific datasets).
+      - Live search input matching Rule ID, Name, Dataset, and issue diagnosis.
+      - Sorting by severity, status, dataset, and affected records.
+      - Per-row "View Evidence" trigger and "Trace Impact" action button with event propagation isolation.
+    - `EvidenceDrawer.tsx`: Accessible slide-over drawer (`role="dialog"`, `aria-modal="true"`) featuring:
+      - Keyboard focus trapping (`Tab` and `Shift+Tab`) and `Escape` key close listener.
+      - Rule header with severity, status, and category badges.
+      - "Observed vs Expected" comparative card detailing specific constraint deviations.
+      - Structured sample records breakdown:
+        - Duplicate key groupings with occurrences and 1-indexed line numbers (`#43, #109`).
+        - Sample orphaned foreign keys and broken reference rows (`order_items` referencing non-existent `PRD-9001`).
+        - Negative quantity and range violations.
+        - Temporal ingestion gap metrics (`max_gap_hours`, `gap_start`, `gap_end`).
+        - Raw JSON diagnostic collapsible panel (`<details>`).
+      - "Trace Downstream Impact" action button delegating to lineage/impact explorer.
+    - `ValidationView.tsx`: Orchestration view connecting summary cards, execution trigger button ("Execute Quality Validations" / "Re-run Quality Validations"), error alert banner, empty state, findings table, and slide-over evidence drawer.
+    - `index.ts`: Unified validation component exports.
+  - `frontend/src/App.tsx`:
+    - Mounted `ValidationView` within the default `validations` tab panel, wiring "Trace Impact" to automatically transition to the `impact` tab with alert context.
+  - `frontend/tests/`:
+    - `api/validations.test.ts`: 4 unit tests verifying GET/POST execution, query parameter serialisation, and response typing.
+    - `components/ValidationSummaryCards.test.tsx`: 4 component tests verifying rendering, metric counts, run status badges, and loading states.
+    - `components/FindingsTable.test.tsx`: 8 component tests verifying table rendering, `CRITICAL` severity isolation of duplicate order checks (`VAL-ORD-001`), status/dataset filtering, search query filtering, row selection, Trace Impact click isolation, and filter reset.
+    - `components/EvidenceDrawer.test.tsx`: 8 component tests verifying closed/null state, observed vs expected values, sample duplicates with line numbers, orphaned keys, backdrop/close/Escape dismissal, and Trace Impact trigger.
+    - `components/ValidationView.test.tsx`: 4 integration tests verifying empty state, run execution trigger, summary cards display, and evidence drawer invocation.
+    - `App.test.tsx`: 10 integration tests verified passing with validations tab integration.
+- **Verification Evidence:**
+  - `cd frontend && npm test -- --run` (`vitest run`) -> 62 passed across 11 test files in 9.43s (100% pass rate).
+  - `cd frontend && npm run typecheck` (`tsc --noEmit`) -> 0 errors.
+  - `cd frontend && npm run lint` (`eslint .`) -> 0 warnings, 0 errors.
+  - `cd frontend && npm run build` (`tsc && vite build`) -> Built production bundle in 6.90s (HTML 1.01 kB, CSS 28.08 kB, JS 229.35 kB).
+  - `cd backend && pytest` -> 235 passed across 19 test files in 16.99s (zero backend regressions).
+- **Remaining Limitations:** None. Findings Explorer and Evidence Drawer UI are fully operational with zero mocks and authentic API integration. Ready for `T18` (Interactive Lineage DAG & Blast Radius Visualization UI).
+
+### `T18` — Interactive Lineage DAG & Blast Radius Visualization UI
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - Installed `@xyflow/react` (`^12.12.0`) in `frontend/package.json`.
+  - `frontend/src/types/`:
+    - `lineage.ts`: TypeScript models matching backend schemas: `LineageNodeType`, `NodePosition`, `LineageNodeData`, `LineageNode`, `LineageEdge`, `LineageGraphResponse`, `LineageNodeSummary`, and `LineageNodeDetail`.
+    - `impact.ts`: TypeScript models matching backend impact schemas: `AssetImpactStatus` (`CONFIRMED_FAILED`, `DIRECTLY_AFFECTED`, `POTENTIALLY_AFFECTED`, `HEALTHY`), `ImpactTargetType`, `AffectedAsset`, `ImpactSummary`, `BlastRadiusReport`, and `ImpactTraceRequest`.
+    - `index.ts`: Re-export all lineage and impact domain types.
+  - `frontend/src/api/`:
+    - `lineage.ts`: Typed REST API client:
+      - `getLineageGraph(scenarioId?)`: Fetches `GET /api/v1/lineage` with Dagre-computed node coordinates.
+      - `getLineageNodeDetail(nodeId, scenarioId?)`: Fetches `GET /api/v1/lineage/nodes/{id}` with immediate predecessors and successors.
+      - `traceDownstreamImpact(request)`: Dispatches `POST /api/v1/impact/trace` with full blast radius computation.
+    - `index.ts`: Re-export lineage API client methods.
+  - `frontend/tests/setup.ts`:
+    - Added mocks for `ResizeObserver`, `DOMMatrixReadOnly`, and `SVGElement.prototype.getBBox` enabling React Flow component testing in jsdom.
+  - `frontend/src/components/lineage/`:
+    - `CustomNode.tsx`: Custom React Flow node component implementing:
+      - Asset type styling for all 5 classifications: `SOURCE_DATASET` (Blue, Database), `TRANSFORMATION` (Amber, Cpu), `DERIVED_DATASET` (Indigo, Layers), `METRIC` (Emerald, TrendingUp), and `REPORT` (Fuchsia, LayoutDashboard).
+      - Dual-dimension status chips: Compute Status (terminal icon + "Exit 0" or "Failed") and Quality Health (badge + "Healthy", "Corrupted", or "Degraded").
+      - Blast radius status chips: "Failure Origin" (`CONFIRMED_FAILED`), "Direct Consumer" (`DIRECTLY_AFFECTED`), and "Blast Radius" (`POTENTIALLY_AFFECTED`).
+      - Visual states: selected glow ring (`ring-lux-400`), failure origin red glow (`ring-rose-500`), and dimmed state (`opacity-30`) for assets outside active blast radius.
+      - Left target and right source connection handles.
+    - `LineageLegend.tsx`: Visual reference card explaining node types, dual health status dimensions (ADR-006), and blast radius classification tiers.
+    - `NodeDetailsPanel.tsx`: Slide-over inspector panel displaying:
+      - Node metadata (owner, description, storage dataset, engine).
+      - Dual-dimension status cards (Compute vs Quality).
+      - Blast radius summary with total affected assets, breakdown by tier, and step-by-step dependency chain explanations.
+      - Immediate upstream predecessors and downstream consumers with clickable navigation.
+      - "Center Node" and "Close" action triggers.
+    - `LineageView.tsx`: Main interactive React Flow canvas container managing:
+      - Toolbar: Node and edge counts, live search input, asset type filter dropdown, "Reset Highlight" button, and Legend toggle.
+      - React Flow canvas: Zoom, pan, background grid dots, interactive Controls, and custom-colored MiniMap.
+      - Interactive path highlighting: clicking a node traces its downstream blast radius via `POST /api/v1/impact/trace`, highlighting affected nodes and animating edges in rose/red while dimming unrelated graph branches.
+      - Slide-over `NodeDetailsPanel` for inspecting selected nodes.
+    - `index.ts`: Unified lineage component exports.
+  - `frontend/src/App.tsx`:
+    - Mounted `LineageView` in both `lineage` and `impact` tabs.
+    - Connected "Trace Impact" from `ValidationView` findings to automatically transition to Lineage with the failing target pre-selected and highlighted.
+  - `frontend/tests/`:
+    - `api/lineage.test.ts`: 3 unit tests verifying graph retrieval, node details, and impact trace API calls.
+    - `components/CustomNode.test.tsx`: 7 component tests verifying node type rendering, dual status chips (Exit 0 vs Corrupted), blast radius chips, and dimmed states.
+    - `components/NodeDetailsPanel.test.tsx`: 5 component tests verifying metadata, dual health cards, blast radius summary, dependency path breadcrumbs, node selection, and panel close.
+    - `components/LineageView.test.tsx`: 6 component tests asserting:
+      - Acceptance Criterion 1: renders all 16 nodes with clear visual hierarchy.
+      - Acceptance Criterion 2: selecting `src_orders` highlights downstream path through to `report_exec_dash`.
+      - Search query filtering.
+      - Asset type dropdown filtering.
+      - Reset Highlight button restoring default un-dimmed graph.
+      - Network failure error boundary state.
+    - `App.test.tsx`: Updated with lineage API mocks and verified tab switching to Lineage DAG visualizer.
+- **Verification Evidence:**
+  - `cd frontend && npm test -- --run` (`vitest run`) -> 83 passed across 15 test files in 17.49s (100% pass rate).
+  - `cd frontend && npm run typecheck` (`tsc --noEmit`) -> 0 errors.
+  - `cd frontend && npm run lint` (`eslint .`) -> 0 warnings, 0 errors.
+  - `cd frontend && npm run build` (`tsc && vite build`) -> Built production bundle in 9.55s (HTML 1.01 kB, CSS 54.60 kB, JS 451.95 kB / gzip 133.83 kB).
+  - `cd backend && pytest` -> 235 passed across 19 test files in 18.15s (zero regressions).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 86 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 61 source files.
+- **Remaining Limitations:** None. Interactive Lineage DAG and Blast Radius visualizer is fully implemented and tested with authentic graph data and traversal. Ready for `T19` (Pipeline Observability, Freshness & Run History UI).
+
+
 
 
 

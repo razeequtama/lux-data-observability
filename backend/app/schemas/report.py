@@ -154,4 +154,3 @@ class IncidentReportData(BaseModel):
     integrity: dict[str, str] = Field(
         default_factory=dict, description="SHA-256 cryptographic integrity hash"
     )
-

@@ -5,6 +5,8 @@ import { AlertBanner, AlertType } from './components/common/AlertBanner';
 import { DatasetInspector } from './components/dataset/DatasetInspector';
 import { DatasetPreviewModal } from './components/dataset/DatasetPreviewModal';
 import { UploadModal } from './components/dataset/UploadModal';
+import { ValidationView } from './components/validation/ValidationView';
+import { LineageView } from './components/lineage/LineageView';
 import {
   listScenarios,
   loadScenario,
@@ -16,6 +18,7 @@ import {
   FixtureVersion,
   NavigationTab,
   ScenarioSummary,
+  ValidationFindingItem,
 } from './types';
 
 export const App: React.FC = () => {
@@ -31,6 +34,8 @@ export const App: React.FC = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isLoadingScenario, setIsLoadingScenario] = useState(false);
   const [isLoadingDatasets, setIsLoadingDatasets] = useState(false);
+  const [selectedFindingForImpact, setSelectedFindingForImpact] = useState<ValidationFindingItem | null>(null);
+  const [selectedLineageNodeId, setSelectedLineageNodeId] = useState<string | null>(null);
   const [alert, setAlert] = useState<{
     type: AlertType;
     message: string;
@@ -185,42 +190,68 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Tab Specific Content Shell */}
-          <div className="grid grid-cols-1 gap-6">
-            <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-8 text-center space-y-4">
-              <div className="w-12 h-12 mx-auto rounded-full bg-lux-900/50 border border-lux-700/30 flex items-center justify-center text-lux-300">
-                <activeTabDef.icon className="w-6 h-6" />
-              </div>
-              <div className="max-w-md mx-auto space-y-2">
-                <h2 className="text-lg font-semibold text-slate-200">
-                  {activeTabDef.label} Module Ready
-                </h2>
-                <p className="text-sm text-slate-400">
-                  Frontend scaffolding and Lux Purple tokens are operational. Domain view logic
-                  will be mounted in subsequent tasks.
-                </p>
-              </div>
+          {activeTab === 'validations' ? (
+            <ValidationView
+              scenarioId={activeScenarioId}
+              fixtureVersion={activeFixtureVersion}
+              availableDatasets={datasets.map((d) => d.id)}
+              onTraceImpact={(finding) => {
+                setSelectedFindingForImpact(finding);
+                setSelectedLineageNodeId(null);
+                setActiveTab('lineage');
+                setAlert({
+                  type: 'info',
+                  message: `Tracing Impact for ${finding.rule_id}`,
+                  details: `Downstream impact analysis requested from "${finding.rule_name}" on dataset "${finding.dataset_id}". Highlighting blast radius in Lineage DAG.`,
+                });
+              }}
+            />
+          ) : activeTab === 'lineage' || activeTab === 'impact' ? (
+            <LineageView
+              scenarioId={activeScenarioId}
+              initialSelectedNodeId={selectedLineageNodeId}
+              initialTargetFinding={selectedFindingForImpact}
+              onSelectNode={(nodeId) => {
+                setSelectedLineageNodeId(nodeId);
+              }}
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-8 text-center space-y-4">
+                <div className="w-12 h-12 mx-auto rounded-full bg-lux-900/50 border border-lux-700/30 flex items-center justify-center text-lux-300">
+                  <activeTabDef.icon className="w-6 h-6" />
+                </div>
+                <div className="max-w-md mx-auto space-y-2">
+                  <h2 className="text-lg font-semibold text-slate-200">
+                    {activeTabDef.label} Module Ready
+                  </h2>
+                  <p className="text-sm text-slate-400">
+                    Frontend scaffolding and Lux Purple tokens are operational. Domain view logic
+                    will be mounted in subsequent tasks.
+                  </p>
+                </div>
 
-              {/* Theme verification sample chips */}
-              <div className="pt-4 border-t border-slate-800/80 max-w-lg mx-auto flex items-center justify-center space-x-3 text-xs">
-                <span className="px-2.5 py-1 rounded-full bg-lux-700 text-white font-medium">
-                  Primary (#6B46C1)
-                </span>
-                <span className="px-2.5 py-1 rounded-full bg-lux-600 text-white font-medium">
-                  Hover (#7C3AED)
-                </span>
-                <span className="px-2.5 py-1 rounded-full bg-status-healthy/15 text-status-healthy border border-status-healthy/30 font-medium">
-                  Healthy
-                </span>
-                <span className="px-2.5 py-1 rounded-full bg-status-warning/15 text-status-warning border border-status-warning/30 font-medium">
-                  Warning
-                </span>
-                <span className="px-2.5 py-1 rounded-full bg-status-corrupted/15 text-status-corrupted border border-status-corrupted/30 font-medium">
-                  Corrupted
-                </span>
+                {/* Theme verification sample chips */}
+                <div className="pt-4 border-t border-slate-800/80 max-w-lg mx-auto flex items-center justify-center space-x-3 text-xs">
+                  <span className="px-2.5 py-1 rounded-full bg-lux-700 text-white font-medium">
+                    Primary (#6B46C1)
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-lux-600 text-white font-medium">
+                    Hover (#7C3AED)
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-status-healthy/15 text-status-healthy border border-status-healthy/30 font-medium">
+                    Healthy
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-status-warning/15 text-status-warning border border-status-warning/30 font-medium">
+                    Warning
+                  </span>
+                  <span className="px-2.5 py-1 rounded-full bg-status-corrupted/15 text-status-corrupted border border-status-corrupted/30 font-medium">
+                    Corrupted
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
 
