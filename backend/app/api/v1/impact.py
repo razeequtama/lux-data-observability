@@ -35,4 +35,3 @@ def trace_downstream_impact(
         include_root=payload.include_root,
         db=db,
     )
-

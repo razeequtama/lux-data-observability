@@ -22,6 +22,7 @@ from app.schemas.scenario import (
     ScenarioSummary,
 )
 from app.services.ingestion.reader import DatasetReader
+from app.services.pipeline.service import PipelineHistoryService
 
 
 def _parse_iso_datetime(value: str | None) -> datetime | None:
@@ -361,32 +362,11 @@ class ScenarioLoaderService:
             db.add(edge)
 
         # Ingest Pipeline Runs & Freshness Checks
-        for run_def in pipeline_meta.get("pipeline_runs", []):
-            run_id = run_def["id"]
-            start_dt = _parse_iso_datetime(run_def.get("start_time")) or now
-            end_dt = _parse_iso_datetime(run_def.get("end_time")) or now
-            run_log_str = (
-                json.dumps(run_def["run_log"])
-                if "run_log" in run_def and run_def["run_log"]
-                else None
-            )
-
-            pipe_run = PipelineRun(
-                id=run_id,
-                scenario_id=scenario_id,
-                pipeline_name=run_def.get("pipeline_name", "default_pipeline"),
-                execution_status=run_def.get("execution_status", "COMPLETED_SUCCESS"),
-                quality_health=run_def.get("quality_health", "HEALTHY"),
-                start_time=start_dt,
-                end_time=end_dt,
-                duration_ms=run_def.get("duration_ms", 0),
-                records_ingested=run_def.get("records_ingested", 0),
-                records_written=run_def.get("records_written", 0),
-                error_message=run_def.get("error_message"),
-                run_log=run_log_str,
-                created_at=now,
-            )
-            db.add(pipe_run)
+        PipelineHistoryService.seed_pipeline_runs(
+            db=db,
+            scenario_id=scenario_id,
+            runs_data=pipeline_meta.get("pipeline_runs", []),
+        )
 
         for check_def in pipeline_meta.get("freshness_checks", []):
             check_id = check_def["id"]

@@ -29,6 +29,12 @@ from app.schemas.lineage import (
     ReactFlowEdge,
     ReactFlowNode,
 )
+from app.schemas.pipeline import (
+    PipelineExecutionStatus,
+    PipelineRunResponse,
+    PipelineStepLog,
+    QualityHealthStatus,
+)
 from app.schemas.scenario import (
     LoadScenarioRequest,
     LoadScenarioResponse,
@@ -74,6 +80,10 @@ __all__ = [
     "LoadScenarioRequest",
     "LoadScenarioResponse",
     "NodePosition",
+    "PipelineExecutionStatus",
+    "PipelineRunResponse",
+    "PipelineStepLog",
+    "QualityHealthStatus",
     "ReactFlowEdge",
     "ReactFlowNode",
     "RuleCategory",

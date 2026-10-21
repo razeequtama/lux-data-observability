@@ -12,7 +12,7 @@ This document is the single source of truth for implementation tracking across e
 | **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `COMPLETED` |
 | **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `COMPLETED` |
 | **M3** | Lineage DAG Domain Engine & Graph Integrity Validator | `T09`, `T10`, `T11` | `COMPLETED` |
-| **M4** | Pipeline Observability & Run History | `T12`, `T13` | `NOT_STARTED` |
+| **M4** | Pipeline Observability & Run History | `T12`, `T13` | `IN_PROGRESS` |
 | **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `NOT_STARTED` |
 | **M6** | Frontend "Trace the Failure" Interactive UI | `T16`, `T17`, `T18`, `T19`, `T20` | `NOT_STARTED` |
 | **M7** | Recovery Verification & End-to-End Acceptance | `T21`, `T22`, `T23` | `NOT_STARTED` |
@@ -35,7 +35,7 @@ This document is the single source of truth for implementation tracking across e
 | `T09` | Lineage DAG Domain Engine & Graph Integrity Validator | `T01`, `T03` | `COMPLETED` | `pytest tests/unit/test_lineage_graph.py` 22 passed; full `pytest` 142 passed; `ruff` & `mypy` 0 errors; rejected cyclic graphs with `CyclicDependencyError`; loaded 16-node 14-edge scenario cleanly; verified upstream ancestors of `report_exec_dash` include `orders` and `order_items` |
 | `T10` | Downstream Impact Analysis Engine & Blast Radius Classifier | `T08`, `T09` | `COMPLETED` | `pytest tests/unit/test_impact_analysis.py` 13 passed; full `pytest` 155 passed; `ruff` & `mypy` 0 errors; orders.csv blast radius correctly classifies `dim_orders` as `DIRECTLY_AFFECTED` and `agg_daily_revenue`, `metric_revenue`, `report_exec_dash` as `POTENTIALLY_AFFECTED` |
 | `T11` | Lineage & Impact REST API Endpoints | `T09`, `T10` | `COMPLETED` | `pytest tests/integration/test_lineage_api.py` 16 passed; full `pytest` 171 passed; `ruff` & `mypy` 0 errors; `GET /api/v1/lineage` returns 16 nodes with valid Dagre `(x, y)`; `POST /api/v1/impact/trace` matches API contract |
-| `T12` | Pipeline Run History & Execution vs Quality Dual-Dimension Tracker | `T03`, `T08` | `NOT_STARTED` | — |
+| `T12` | Pipeline Run History & Execution vs Quality Dual-Dimension Tracker | `T03`, `T08` | `COMPLETED` | `pytest tests/integration/test_pipeline_api.py` 8 passed; full `pytest` 187 passed; `ruff` & `mypy` 0 errors; overnight run verified with `COMPLETED_SUCCESS` compute vs `CORRUPTED` quality health; step logs & pagination verified |
 | `T13` | Dataset Partition Freshness & SLA Monitoring Service | `T05`, `T12` | `NOT_STARTED` | — |
 | `T14` | Investigation Workspace Engine & Schema Integration | `T03`, `T08`, `T10` | `NOT_STARTED` | — |
 | `T15` | Safe Report Generator Service (JSON & HTML with CSP) | `T14` | `NOT_STARTED` | — |
@@ -53,9 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), and **M3** (`T09`, `T10`, `T11`) are `COMPLETED`. Milestone **M4** is `NOT_STARTED`.
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), and **M3** (`T09`, `T10`, `T11`) are `COMPLETED`. Milestone **M4** is `IN_PROGRESS` (`T12` completed, `T13` pending).
 - **Next Eligible Tasks:**
-  - `T12` (Pipeline Run History & Execution vs Quality Dual-Dimension Tracker) — Prerequisites satisfied (`T03`, `T08`). Initiates Milestone **M4**.
+  - `T13` (Dataset Partition Freshness & SLA Monitoring Service) — Prerequisites satisfied (`T05`, `T12`). Completes Milestone **M4**.
   - `T14` (Investigation Workspace Engine & Schema Integration) — Prerequisites satisfied (`T03`, `T08`, `T10`). Initiates Milestone **M5**.
   - `T16` (Frontend Navigation Shell, Scenario Switcher & Dataset Inspector) — Prerequisites satisfied (`T02`, `T05`). Initiates Milestone **M6**.
 
@@ -411,6 +411,44 @@ This document is the single source of truth for implementation tracking across e
   - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 529ms (zero frontend regressions).
   - `cd frontend && npm run build` -> `tsc && vite build` built in 3.93s, generating production bundle.
 - **Remaining Limitations:** None. Lineage and Impact REST API endpoints are fully operational, concluding Milestone **M3**. The system is ready for Milestone **M4** (`T12`: Pipeline Run History & Execution vs Quality Dual-Dimension Tracker), Milestone **M5** (`T14`: Investigation Workspace Engine), and Milestone **M6** (`T16` & `T18`: Interactive Lineage DAG UI).
+
+### `T12` — Pipeline Run History & Execution vs Quality Dual-Dimension Tracker
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/schemas/pipeline.py`:
+    - Enums: `PipelineExecutionStatus` (`COMPLETED_SUCCESS`, `COMPLETED_WITH_WARNINGS`, `FAILED`, `RUNNING`, `CANCELLED`) and `QualityHealthStatus` (`HEALTHY`, `WARNING`, `DEGRADED`, `CORRUPTED`, `UNVALIDATED`) per ADR-006.
+    - Pydantic models: `PipelineStepLog` (step name, status, record count, execution duration) and `PipelineRunResponse` with `from_model` classmethod handling JSON step log deserialization with fallback.
+  - `backend/app/schemas/__init__.py`:
+    - Exported `PipelineExecutionStatus`, `QualityHealthStatus`, `PipelineStepLog`, and `PipelineRunResponse`.
+  - `backend/app/services/pipeline/service.py`:
+    - `PipelineHistoryService`:
+      - `get_runs`: Historical pipeline execution retrieval, descending chronological ordering, pagination (`limit`, `offset`), and scenario filtering.
+      - `get_run_by_id`: Single pipeline run lookup with structured 404 `PIPELINE_RUN_NOT_FOUND` error handling.
+      - `evaluate_quality_health`: Deterministic ADR-006 rule evaluator determining quality status (`UNVALIDATED` -> `CORRUPTED` on CRITICAL -> `DEGRADED` on HIGH -> `WARNING` on MEDIUM/LOW/WARNING -> `HEALTHY`).
+      - `seed_pipeline_runs`: Idempotent upsert of historical execution run records from definitions.
+      - `seed_from_scenario_file`: File loader for `pipeline_history.json`.
+    - `parse_iso_datetime`: Safe ISO timestamp parsing with UTC timezone normalization.
+  - `backend/app/services/pipeline/__init__.py`:
+    - Exported `PipelineHistoryService` and `parse_iso_datetime`.
+  - `backend/app/services/ingestion/loader.py`:
+    - Integrated with `PipelineHistoryService.seed_pipeline_runs` for standardized pipeline run seeding during scenario loading.
+  - `backend/app/api/v1/pipelines.py`:
+    - `GET /api/v1/pipelines/runs`: Returns historical execution runs with pagination, scenario filtering, and optional log suppression (`include_logs`).
+    - `GET /api/v1/pipelines/runs/{run_id}`: Returns single pipeline run detail with step logs and dual-dimension status badges.
+  - `backend/app/api/v1/router.py`:
+    - Registered `pipelines_router` into master v1 API router.
+  - `backend/tests/unit/test_pipeline_service.py`:
+    - 8 unit tests verifying ISO parsing, status evaluation across all quality tiers, seed/query operations, and step log parsing with resilient fallback on malformed data.
+  - `backend/tests/integration/test_pipeline_api.py`:
+    - 8 integration tests asserting empty lists on non-existent scenarios, 3-run sequence for `monday_revenue_mystery`, pagination, and the signature core requirement: the overnight run demonstrates `COMPLETED_SUCCESS` compute status alongside `CORRUPTED` data quality health.
+- **Verification Evidence:**
+  - `cd backend && pytest tests/unit/test_pipeline_service.py tests/integration/test_pipeline_api.py -v` -> 16 passed in 1.12s.
+  - `cd backend && pytest` -> 187 passed in 7.58s (100% unit and integration test suite passing).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 73 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 54 source files.
+- **Remaining Limitations:** None. Dual-dimension pipeline run history is persisted and accessible via REST endpoints. Ready for partition freshness & SLA monitoring (`T13`).
+
 
 
 
