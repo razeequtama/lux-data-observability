@@ -66,6 +66,44 @@ class PayloadTooLargeError(LuxException):
         )
 
 
+class CyclicDependencyError(LuxException):
+    """Raised when a lineage dependency cycle is detected in the DAG."""
+
+    def __init__(
+        self,
+        message: str = "Lineage graph contains cyclic dependencies.",
+        cycle_path: list[str] | None = None,
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        details_dict = details.copy() if details else {}
+        if cycle_path is not None:
+            details_dict["cycle_path"] = cycle_path
+        super().__init__(
+            code="CYCLIC_DEPENDENCY",
+            message=message,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details_dict,
+        )
+        self.cycle_path: list[str] = cycle_path or []
+
+
+class LineageIntegrityError(LuxException):
+    """Raised when graph integrity constraints (e.g. dangling edges, missing nodes) are violated."""
+
+    def __init__(
+        self,
+        message: str = "Lineage graph integrity validation failed.",
+        code: str = "LINEAGE_INTEGRITY_ERROR",
+        details: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(
+            code=code,
+            message=message,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            details=details or {},
+        )
+
+
 def format_error_payload(
     code: str,
     message: str,

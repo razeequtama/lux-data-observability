@@ -7,6 +7,13 @@ from app.schemas.dataset import (
     DatasetResponse,
     DatasetUploadResponse,
 )
+from app.schemas.lineage import (
+    GraphValidationSummary,
+    LineageEdge,
+    LineageGraphSchema,
+    LineageNode,
+    LineageNodeType,
+)
 from app.schemas.scenario import (
     LoadScenarioRequest,
     LoadScenarioResponse,
@@ -33,7 +40,12 @@ __all__ = [
     "DatasetUploadResponse",
     "ErrorDetail",
     "ErrorResponse",
+    "GraphValidationSummary",
     "HealthResponse",
+    "LineageEdge",
+    "LineageGraphSchema",
+    "LineageNode",
+    "LineageNodeType",
     "LoadScenarioRequest",
     "LoadScenarioResponse",
     "RuleCategory",

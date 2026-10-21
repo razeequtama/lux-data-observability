@@ -11,7 +11,7 @@ This document is the single source of truth for implementation tracking across e
 | **M0** | Core Foundation, Tooling & Scaffolding | `T01`, `T02` | `COMPLETED` |
 | **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `COMPLETED` |
 | **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `COMPLETED` |
-| **M3** | Lineage DAG Domain Engine & Graph Integrity Validator | `T09`, `T10`, `T11` | `NOT_STARTED` |
+| **M3** | Lineage DAG Domain Engine & Graph Integrity Validator | `T09`, `T10`, `T11` | `IN_PROGRESS` |
 | **M4** | Pipeline Observability & Run History | `T12`, `T13` | `NOT_STARTED` |
 | **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `NOT_STARTED` |
 | **M6** | Frontend "Trace the Failure" Interactive UI | `T16`, `T17`, `T18`, `T19`, `T20` | `NOT_STARTED` |
@@ -32,7 +32,7 @@ This document is the single source of truth for implementation tracking across e
 | `T06` | Validation Rule Framework & Core Rule Evaluators | `T01`, `T03` | `COMPLETED` | `pytest tests/unit/test_rules_core.py` 38 passed; full `pytest` 81 passed; `ruff` and `mypy` 0 errors; detected 15 duplicates in orders.csv and 8 negative inventory SKUs in inventory.csv |
 | `T07` | Relational, Temporal & Schema Rule Evaluators | `T06` | `COMPLETED` | `pytest tests/unit/test_rules_relational.py` 25 passed; full `pytest` 106 passed; `ruff` and `mypy` 0 errors; detected 24 orphaned items in order_items.csv and Sunday 4.47h gap in orders.csv; clean recovery verified |
 | `T08` | Validation Runner Service, Persistence & Structured Findings API | `T03`, `T05`, `T06`, `T07` | `COMPLETED` | `pytest tests/integration/test_validations_api.py` 14 passed; full `pytest` 120 passed; `ruff` and `mypy` 0 errors; exactly 4 failed checks detected on defective fixtures; structured sample keys & capping verified |
-| `T09` | Lineage DAG Domain Engine & Graph Integrity Validator | `T01`, `T03` | `NOT_STARTED` | — |
+| `T09` | Lineage DAG Domain Engine & Graph Integrity Validator | `T01`, `T03` | `COMPLETED` | `pytest tests/unit/test_lineage_graph.py` 22 passed; full `pytest` 142 passed; `ruff` & `mypy` 0 errors; rejected cyclic graphs with `CyclicDependencyError`; loaded 16-node 14-edge scenario cleanly; verified upstream ancestors of `report_exec_dash` include `orders` and `order_items` |
 | `T10` | Downstream Impact Analysis Engine & Blast Radius Classifier | `T08`, `T09` | `NOT_STARTED` | — |
 | `T11` | Lineage & Impact REST API Endpoints | `T09`, `T10` | `NOT_STARTED` | — |
 | `T12` | Pipeline Run History & Execution vs Quality Dual-Dimension Tracker | `T03`, `T08` | `NOT_STARTED` | — |
@@ -53,9 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), and **M2** (`T06`, `T07`, `T08`) are `COMPLETED`.
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), and **M2** (`T06`, `T07`, `T08`) are `COMPLETED`. Milestone **M3** is `IN_PROGRESS` with `T09` `COMPLETED`.
 - **Next Eligible Tasks:**
-  - `T09` (Lineage DAG Domain Engine & Graph Integrity Validator) — Prerequisites satisfied (`T01`, `T03`). Initiates Milestone **M3**.
+  - `T10` (Downstream Impact Analysis Engine & Blast Radius Classifier) — Prerequisites satisfied (`T08`, `T09`). Continues Milestone **M3**.
   - `T12` (Pipeline Run History & Execution vs Quality Dual-Dimension Tracker) — Prerequisites satisfied (`T03`, `T08`). Initiates Milestone **M4**.
   - `T16` (Frontend Navigation Shell, Scenario Switcher & Dataset Inspector) — Prerequisites satisfied (`T02`, `T05`). Initiates Milestone **M6**.
 
@@ -273,5 +273,48 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && mypy app` -> Success: no issues found in 44 source files.
   - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 866ms (zero frontend regressions).
 - **Remaining Limitations:** None. Validation engine and REST endpoints are verified and ready for downstream impact tracing (`T10`), lineage DAG integration (`T09`), pipeline history tracking (`T12`), and UI findings explorer (`T17`).
+
+### `T09` — Lineage DAG Domain Engine & Graph Integrity Validator
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/core/errors.py`:
+    - Added `CyclicDependencyError` (subclassing `LuxException` with HTTP 400, structured `code="CYCLIC_DEPENDENCY"`, and `cycle_path` attribute/detail list).
+    - Added `LineageIntegrityError` (subclassing `LuxException` with HTTP 400, structured `code="LINEAGE_INTEGRITY_ERROR"`, capturing dangling references and graph integrity violations).
+  - `backend/app/schemas/lineage.py` & `backend/app/schemas/__init__.py`:
+    - `LineageNodeType` (`StrEnum`): `SOURCE_DATASET`, `TRANSFORMATION`, `DERIVED_DATASET`, `METRIC`, `REPORT`.
+    - `LineageNode`: Pydantic model capturing unique ID, name, classification type, optional dataset foreign key, owner, description, execution status, quality health, and JSON-parsed metadata.
+    - `LineageEdge`: Pydantic model capturing edge ID, source ID, target ID, and dependency type.
+    - `LineageGraphSchema`: Composite schema for graph payload serialization.
+    - `GraphValidationSummary`: Diagnostic validation summary returning `is_valid`, `is_dag`, `cycles`, `dangling_edges`, `isolated_nodes`, `errors`, and `warnings`.
+  - `backend/app/services/lineage/graph.py` & `backend/app/services/lineage/__init__.py`:
+    - `LineageGraph`: NetworkX `DiGraph` encapsulation providing strict DAG domain operations.
+    - Graph integrity validation:
+      - `validate_integrity()`: Non-throwing comprehensive structural validator evaluating acyclicity (`nx.is_directed_acyclic_graph`), extracting simple cycles (`nx.simple_cycles`), flagging dangling edges (referencing unregistered nodes), and categorizing isolated nodes (`nx.isolates`).
+      - `validate()`: Raising `CyclicDependencyError` with the cycle path loop or `LineageIntegrityError` on invalid graph topologies.
+    - Traversal & dependency queries:
+      - `get_upstream_nodes()`: Transitive upstream ancestor discovery (`nx.ancestors`).
+      - `get_downstream_nodes()`: Transitive downstream descendant discovery (`nx.descendants`).
+      - `get_upstream_dataset_ids()`: Resolution of ancestor nodes to underlying storage dataset IDs (`orders`, `order_items`, `products`).
+      - `get_direct_upstream()` / `get_direct_downstream()`: Immediate predecessor and successor inspection.
+      - `topological_sort()`: Topological ordering of nodes (`nx.topological_sort`).
+      - `has_path()` / `get_shortest_path()` / `get_all_paths()`: Path connectivity and routing.
+      - `get_root_nodes()` / `get_terminal_nodes()` / `get_isolated_nodes()`: Boundary node analysis.
+      - `get_subgraph()`: Induced subgraph extraction.
+    - Seed loaders & factory methods:
+      - `from_scenario_dict()`: Ingests `scenario.json` metadata dict with optional validation.
+      - `from_scenario_file()`: Loads scenario graph directly from filesystem JSON.
+      - `from_db()`: Seeds `LineageGraph` from SQLite database entities (`LineageNode`, `LineageEdge`).
+      - `to_dict()` & `to_schema()`: Clean serialization.
+  - `backend/tests/unit/test_lineage_graph.py`:
+    - 22-test unit test suite asserting 16-node / 14-edge scenario graph loading from file and DB, upstream ancestor resolution to `orders` and `order_items`, downstream descendant path traversal to `report_exec_dash`, cycle rejection (self-loops, 2-node loops, multi-hop loops), dangling edge detection, isolated node handling, topological sort verification, path queries, and error boundaries.
+- **Verification Evidence:**
+  - `cd backend && pytest tests/unit/test_lineage_graph.py -v` -> 22 passed in 0.80s.
+  - `cd backend && pytest` -> 142 passed in 4.98s (100% of unit and integration test suite passing).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 61 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 46 source files.
+  - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 473ms (zero frontend regressions).
+- **Remaining Limitations:** None. Lineage graph engine is verified and ready for downstream impact analysis engine (`T10`), REST endpoints (`T11`), and frontend interactive DAG visualizer (`T18`).
+
 
 
