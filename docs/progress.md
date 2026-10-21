@@ -33,7 +33,7 @@ This document is the single source of truth for implementation tracking across e
 | `T07` | Relational, Temporal & Schema Rule Evaluators | `T06` | `COMPLETED` | `pytest tests/unit/test_rules_relational.py` 25 passed; full `pytest` 106 passed; `ruff` and `mypy` 0 errors; detected 24 orphaned items in order_items.csv and Sunday 4.47h gap in orders.csv; clean recovery verified |
 | `T08` | Validation Runner Service, Persistence & Structured Findings API | `T03`, `T05`, `T06`, `T07` | `COMPLETED` | `pytest tests/integration/test_validations_api.py` 14 passed; full `pytest` 120 passed; `ruff` and `mypy` 0 errors; exactly 4 failed checks detected on defective fixtures; structured sample keys & capping verified |
 | `T09` | Lineage DAG Domain Engine & Graph Integrity Validator | `T01`, `T03` | `COMPLETED` | `pytest tests/unit/test_lineage_graph.py` 22 passed; full `pytest` 142 passed; `ruff` & `mypy` 0 errors; rejected cyclic graphs with `CyclicDependencyError`; loaded 16-node 14-edge scenario cleanly; verified upstream ancestors of `report_exec_dash` include `orders` and `order_items` |
-| `T10` | Downstream Impact Analysis Engine & Blast Radius Classifier | `T08`, `T09` | `NOT_STARTED` | — |
+| `T10` | Downstream Impact Analysis Engine & Blast Radius Classifier | `T08`, `T09` | `COMPLETED` | `pytest tests/unit/test_impact_analysis.py` 13 passed; full `pytest` 155 passed; `ruff` & `mypy` 0 errors; orders.csv blast radius correctly classifies `dim_orders` as `DIRECTLY_AFFECTED` and `agg_daily_revenue`, `metric_revenue`, `report_exec_dash` as `POTENTIALLY_AFFECTED` |
 | `T11` | Lineage & Impact REST API Endpoints | `T09`, `T10` | `NOT_STARTED` | — |
 | `T12` | Pipeline Run History & Execution vs Quality Dual-Dimension Tracker | `T03`, `T08` | `NOT_STARTED` | — |
 | `T13` | Dataset Partition Freshness & SLA Monitoring Service | `T05`, `T12` | `NOT_STARTED` | — |
@@ -53,10 +53,11 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), and **M2** (`T06`, `T07`, `T08`) are `COMPLETED`. Milestone **M3** is `IN_PROGRESS` with `T09` `COMPLETED`.
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), and **M2** (`T06`, `T07`, `T08`) are `COMPLETED`. Milestone **M3** is `IN_PROGRESS` with `T09` and `T10` `COMPLETED`.
 - **Next Eligible Tasks:**
-  - `T10` (Downstream Impact Analysis Engine & Blast Radius Classifier) — Prerequisites satisfied (`T08`, `T09`). Continues Milestone **M3**.
+  - `T11` (Lineage & Impact REST API Endpoints) — Prerequisites satisfied (`T09`, `T10`). Concludes Milestone **M3**.
   - `T12` (Pipeline Run History & Execution vs Quality Dual-Dimension Tracker) — Prerequisites satisfied (`T03`, `T08`). Initiates Milestone **M4**.
+  - `T14` (Investigation Workspace Engine & Schema Integration) — Prerequisites satisfied (`T03`, `T08`, `T10`). Initiates Milestone **M5**.
   - `T16` (Frontend Navigation Shell, Scenario Switcher & Dataset Inspector) — Prerequisites satisfied (`T02`, `T05`). Initiates Milestone **M6**.
 
 ---
@@ -315,6 +316,46 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && mypy app` -> Success: no issues found in 46 source files.
   - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 473ms (zero frontend regressions).
 - **Remaining Limitations:** None. Lineage graph engine is verified and ready for downstream impact analysis engine (`T10`), REST endpoints (`T11`), and frontend interactive DAG visualizer (`T18`).
+
+### `T10` — Downstream Impact Analysis Engine & Blast Radius Classifier
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/schemas/impact.py` & `backend/app/schemas/__init__.py`:
+    - `AssetImpactStatus` (`StrEnum`): `CONFIRMED_FAILED`, `DIRECTLY_AFFECTED`, `POTENTIALLY_AFFECTED`, `HEALTHY` (ADR-006).
+    - `ImpactTargetType` (`StrEnum`): `FINDING`, `DATASET`, `NODE`, `RULE`, `AUTO`.
+    - `AffectedAsset`: Pydantic model capturing unique `node_id`, human-readable `name`, `type`, `impact_status`, graph `distance` (hops), complete `dependency_path` (node IDs), `dependency_path_names` (labels), and breadcrumb `explanation`.
+    - `ImpactSummary`: Breakdown of affected asset counts by tier (`confirmed_failed`, `directly_affected`, `potentially_affected`, `healthy`).
+    - `ImpactTraceRequest` & `BlastRadiusReport`: Comprehensive request/response models conforming to REST API specifications and API contracts.
+  - `backend/app/services/impact/analyzer.py` & `backend/app/services/impact/__init__.py`:
+    - `ImpactAnalysisService`: Pure domain service encapsulating downstream blast radius traversal, multi-target resolution, classification logic, and breadcrumb path building:
+      - `resolve_target_node()`: Multi-strategy target resolver resolving node IDs (`src_orders`), file names (`orders.csv`), dataset IDs (`orders`), validation rule IDs (`VAL-ORD-001`), database `ValidationFinding` records, or scenario definitions.
+      - `trace_impact()`: Traces directed paths through `LineageGraph`, categorizes direct vs transitive downstream consumers, determines graph distance, builds dependency breadcrumb explanations, handles inclusion/exclusion of transformation steps and root entities, and sorts outputs deterministically by distance and node ID.
+      - `classify_graph_nodes()`: Evaluates and annotates the entire lineage graph with dual-dimension quality statuses, marking confirmed failures, direct/transitive impacts, and unaffected nodes as `HEALTHY`.
+      - `build_path_explanation()`: Formats human-readable dependency breadcrumb strings.
+      - `get_root_cause_candidates()`: Discovers candidate upstream origin sources feeding into any given node.
+  - `backend/tests/unit/test_impact_analysis.py`:
+    - 13-test unit test suite verifying:
+      - `orders.csv` blast radius identifies `dim_orders` as `DIRECTLY_AFFECTED` (distance 2), and `agg_daily_revenue`, `metric_revenue`, `report_exec_dash` as `POTENTIALLY_AFFECTED` (distance 4, 5, 6).
+      - Step-by-step breadcrumb explanations matching `orders.csv -> transform_clean_orders -> dim_orders -> ... -> Report: Executive Monday Dashboard`.
+      - Target format equivalence (`orders.csv` == `orders` == `src_orders`).
+      - Rule ID resolution (`VAL-ORD-001`).
+      - Database `ValidationFinding` lookup and resolution.
+      - Alternative pipeline branch isolation (`order_items.csv` and `inventory.csv`).
+      - `include_transformations` flag including intermediate compute steps (`tf_orders`, `tf_revenue`).
+      - `include_root` flag omitting root entity when requested.
+      - Terminal/leaf node tracing (`report_exec_dash` having 0 downstream assets).
+      - Full-graph node classification (`classify_graph_nodes`) marking unaffected nodes as `HEALTHY`.
+      - Candidate root cause discovery (`get_root_cause_candidates`).
+      - `NotFoundError` boundary handling for unresolvable targets.
+      - Multi-path graph topologies (shortest path selection and item deduplication).
+- **Verification Evidence:**
+  - `cd backend && pytest tests/unit/test_impact_analysis.py -v` -> 13 passed in 1.17s.
+  - `cd backend && pytest` -> 155 passed in 7.37s (100% test suite passing, zero regressions).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 64 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 48 source files.
+- **Remaining Limitations:** None. Downstream impact analysis engine is verified and ready for REST API exposure in `T11` and downstream integration in `T14` (Investigation Workspace) and `T21` (Recovery Verification).
+
 
 
 

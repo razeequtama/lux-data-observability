@@ -7,6 +7,14 @@ from app.schemas.dataset import (
     DatasetResponse,
     DatasetUploadResponse,
 )
+from app.schemas.impact import (
+    AffectedAsset,
+    AssetImpactStatus,
+    BlastRadiusReport,
+    ImpactSummary,
+    ImpactTargetType,
+    ImpactTraceRequest,
+)
 from app.schemas.lineage import (
     GraphValidationSummary,
     LineageEdge,
@@ -34,6 +42,9 @@ from app.schemas.validation import (
 )
 
 __all__ = [
+    "AffectedAsset",
+    "AssetImpactStatus",
+    "BlastRadiusReport",
     "ColumnSchema",
     "DatasetPreviewResponse",
     "DatasetResponse",
@@ -42,6 +53,9 @@ __all__ = [
     "ErrorResponse",
     "GraphValidationSummary",
     "HealthResponse",
+    "ImpactSummary",
+    "ImpactTargetType",
+    "ImpactTraceRequest",
     "LineageEdge",
     "LineageGraphSchema",
     "LineageNode",

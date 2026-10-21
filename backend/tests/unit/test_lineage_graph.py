@@ -431,4 +431,3 @@ def test_serialization_to_dict_and_schema(scenario_file_path: Path) -> None:
     schema = graph.to_schema()
     assert len(schema.nodes) == 16
     assert len(schema.edges) == 14
-
