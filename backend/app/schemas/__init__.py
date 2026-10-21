@@ -13,6 +13,13 @@ from app.schemas.scenario import (
     ScenarioDetail,
     ScenarioSummary,
 )
+from app.schemas.validation import (
+    RuleCategory,
+    RuleEvaluationResult,
+    RuleSeverity,
+    RuleStatus,
+    ValidationRuleConfig,
+)
 
 __all__ = [
     "ColumnSchema",
@@ -24,6 +31,11 @@ __all__ = [
     "HealthResponse",
     "LoadScenarioRequest",
     "LoadScenarioResponse",
+    "RuleCategory",
+    "RuleEvaluationResult",
+    "RuleSeverity",
+    "RuleStatus",
     "ScenarioDetail",
     "ScenarioSummary",
+    "ValidationRuleConfig",
 ]

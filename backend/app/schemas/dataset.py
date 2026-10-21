@@ -47,4 +47,3 @@ class DatasetUploadResponse(BaseModel):
     file_size_bytes: int = Field(..., description="Stored file size in bytes")
     record_count: int = Field(..., description="Extracted record count")
     column_count: int = Field(..., description="Extracted column count")
-

@@ -10,7 +10,7 @@ This document is the single source of truth for implementation tracking across e
 |---|---|---|---|
 | **M0** | Core Foundation, Tooling & Scaffolding | `T01`, `T02` | `COMPLETED` |
 | **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `COMPLETED` |
-| **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `NOT_STARTED` |
+| **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `IN_PROGRESS` |
 | **M3** | Lineage DAG Domain Engine & Graph Integrity Validator | `T09`, `T10`, `T11` | `NOT_STARTED` |
 | **M4** | Pipeline Observability & Run History | `T12`, `T13` | `NOT_STARTED` |
 | **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `NOT_STARTED` |
@@ -29,7 +29,7 @@ This document is the single source of truth for implementation tracking across e
 | `T03` | Relational Database Schema & SQLite Persistence Engine | `T01` | `COMPLETED` | `pytest` 14 passed (9 db integration); `ruff` & `mypy` 0 errors; WAL mode, all 11 tables, indices, and cascades verified |
 | `T04` | Bundled Signature Fixtures & Scenario Metadata Definition | None | `COMPLETED` | `pytest tests/unit/test_fixtures.py` 8 passed; 1,250 orders, 3,420 items, 250 prods, 250 inv; 15 dups, 24 orphaned, 8 neg inv, 1 temporal gap verified |
 | `T05` | Dataset Ingestion, Scenario Loader & Upload Security Service | `T01`, `T03`, `T04` | `COMPLETED` | `pytest tests/integration/test_ingestion_api.py` 14 passed; `pytest` 43 passed; `ruff` and `mypy` 0 errors; load scenario (200), preview, 20MB limit (413), and path traversal rejection (400) verified |
-| `T06` | Validation Rule Framework & Core Rule Evaluators | `T01`, `T03` | `NOT_STARTED` | — |
+| `T06` | Validation Rule Framework & Core Rule Evaluators | `T01`, `T03` | `COMPLETED` | `pytest tests/unit/test_rules_core.py` 38 passed; full `pytest` 81 passed; `ruff` and `mypy` 0 errors; detected 15 duplicates in orders.csv and 8 negative inventory SKUs in inventory.csv |
 | `T07` | Relational, Temporal & Schema Rule Evaluators | `T06` | `NOT_STARTED` | — |
 | `T08` | Validation Runner Service, Persistence & Structured Findings API | `T03`, `T05`, `T06`, `T07` | `NOT_STARTED` | — |
 | `T09` | Lineage DAG Domain Engine & Graph Integrity Validator | `T01`, `T03` | `NOT_STARTED` | — |
@@ -53,9 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestone **M0** (`T01`, `T02`) and Milestone **M1** (`T03`, `T04`, `T05`) are `COMPLETED` and verified.
+- **Current State:** Milestone **M0** (`T01`, `T02`) and Milestone **M1** (`T03`, `T04`, `T05`) are `COMPLETED`. Milestone **M2** is `IN_PROGRESS` with `T06` verified.
 - **Next Eligible Tasks:**
-  - `T06` (Validation Rule Framework & Core Rule Evaluators) — Prerequisites satisfied (`T01`, `T03`). Initiates Milestone **M2**.
+  - `T07` (Relational, Temporal & Schema Rule Evaluators) — Prerequisite satisfied (`T06`). Continues Milestone **M2**.
   - `T09` (Lineage DAG Domain Engine & Graph Integrity Validator) — Prerequisites satisfied (`T01`, `T03`). Initiates Milestone **M3**.
 
 ---
@@ -178,3 +178,30 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && mypy app` -> Success: no issues found in 37 source files.
   - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 899ms (zero frontend regressions).
 - **Remaining Limitations:** None. Ingestion service, scenario loader, upload security, and dataset preview APIs are fully operational and verified. Milestone M1 is complete. Ready for Milestone M2 (`T06` - Validation Rule Framework).
+
+### `T06` — Validation Rule Framework & Core Rule Evaluators
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/schemas/validation.py`: Pydantic domain models and enums (`RuleCategory`, `RuleSeverity`, `RuleStatus`, `ValidationRuleConfig`, `RuleEvaluationResult`).
+  - `backend/app/services/validation/base.py`:
+    - `ValidationContext`: Dataset execution context supporting in-memory records as well as streaming from CSV and JSON files, record count caching, and cross-dataset context.
+    - `BaseValidationRule`: Abstract base class implementing the template method pattern: automatic duration measurement in milliseconds, structured finding formatting (`_build_result`), active status checks, and resilient exception handling (recording `ERROR` status without engine crashes).
+  - `backend/app/services/validation/core.py`: Core rule evaluators:
+    - `NullCheckRule`: Detects nulls, empty strings, and whitespace-only cells (strictly stripped) across single or multiple required columns.
+    - `UniquenessRule`: Validates single primary keys and multi-column composite keys; aggregates duplicate occurrences and collects sample duplicates with line indices and keys.
+    - `TypeValidityRule`: Verifies parseability for integers, floats, booleans, ISO-8601 timestamps, and JSON, as well as full-match regex patterns, with configurable `allow_null` behavior.
+    - `RecordCountRule`: Verifies dataset row count bounds against `min_count`, `max_count`, and `exact_count` expectations.
+    - `ValueRangeRule`: Asserts numeric lower and upper bounds with configurable inclusive/exclusive boundary checks (`inclusive_min`, `inclusive_max`) and `allow_null` handling.
+  - `backend/app/services/validation/registry.py`: `RuleRegistry` providing dynamic rule lookup, registration decorator (`@register_rule`), and factory instantiation (`create_rule`) supporting dictionaries, Pydantic schemas, and SQLAlchemy ORM models, with graceful handling of SQLite JSON-serialized parameters.
+  - `backend/tests/unit/test_rules_core.py`: 38-test unit suite validating all core evaluators, context streaming, registry factory mechanics, composite keys, whitespace edge cases, and signature acceptance criteria.
+- **Verification Evidence:**
+  - `UniquenessRule` on defective `orders.csv`: Accurately detected 15 duplicate records across 15 distinct keys, with exact row indices (e.g. `ORD-0015` at indices 14 and 1235). Passed with 0 duplicates on corrected `orders.csv`.
+  - `ValueRangeRule` on defective `inventory.csv`: Accurately detected 8 negative inventory SKUs with exact negative values and reasons (e.g. `SKU-0012` at index 11 with quantity -12). Passed with 0 violations on corrected `inventory.csv`.
+  - `cd backend && pytest tests/unit/test_rules_core.py -v` -> 38 passed in 0.18s.
+  - `cd backend && pytest` -> 81 passed in 3.04s (all test suites passing).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 53 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 41 source files.
+  - `cd frontend && npx vitest run` -> 6/6 passed in 612ms (zero frontend regressions).
+- **Remaining Limitations:** None. Core validation framework and evaluators are operational and tested. Ready for advanced relational, temporal, and schema evaluators (`T07`).
+
