@@ -309,3 +309,59 @@ def test_reload_scenario_with_corrected_fixtures(test_client: TestClient) -> Non
     # 3. Verify scenario detail reports corrected version
     detail = test_client.get("/api/v1/scenarios/monday_revenue_mystery").json()
     assert detail["active_fixture_version"] == "corrected"
+
+
+def test_unload_scenario_preserves_csv_fixtures(test_client: TestClient) -> None:
+    """Verify unloading clears SQLite while preserving all .csv fixture files untouched."""
+    # 1. Load scenario first
+    load_res = test_client.post(
+        "/api/v1/scenarios/monday_revenue_mystery/load",
+        json={"fixture_version": "defective"},
+    )
+    assert load_res.status_code == 200
+
+    # Verify datasets are loaded into SQLite
+    list_res = test_client.get("/api/v1/datasets?scenario_id=monday_revenue_mystery")
+    assert list_res.status_code == 200
+    assert len(list_res.json()) == 4
+
+    # Capture fixture files snapshot before unload
+    fixtures_dir = settings.scenarios_dir / "monday_revenue_mystery" / "defective"
+    csv_files = list(fixtures_dir.glob("*.csv"))
+    assert len(csv_files) >= 4
+    csv_snapshots = {f.name: (f.stat().st_size, f.read_bytes()) for f in csv_files}
+
+    # 2. Call unload scenario endpoint
+    unload_res = test_client.post("/api/v1/scenarios/monday_revenue_mystery/unload")
+    assert unload_res.status_code == 200
+    unload_data = unload_res.json()
+
+    assert unload_data["scenario_id"] == "monday_revenue_mystery"
+    assert set(unload_data["unloaded_datasets"]) == {
+        "orders",
+        "order_items",
+        "products",
+        "inventory",
+    }
+    assert unload_data["records_cleared"] == 5170  # 1250 + 3420 + 250 + 250
+    assert "unloaded successfully" in unload_data["message"]
+
+    # 3. Verify datasets are completely removed from SQLite
+    cleared_res = test_client.get("/api/v1/datasets?scenario_id=monday_revenue_mystery")
+    assert cleared_res.status_code == 200
+    assert cleared_res.json() == []
+
+    # 4. Verify EVERY .csv file on disk is completely unaltered
+    for file_name, (expected_size, expected_bytes) in csv_snapshots.items():
+        file_path = fixtures_dir / file_name
+        assert file_path.exists(), f"CSV fixture file '{file_name}' must not be deleted!"
+        assert file_path.stat().st_size == expected_size, f"CSV fixture '{file_name}' size altered!"
+        assert file_path.read_bytes() == expected_bytes, (
+            f"CSV fixture '{file_name}' content altered!"
+        )
+
+    # 5. Verify idempotent re-unload
+    idempotent_res = test_client.post("/api/v1/scenarios/monday_revenue_mystery/unload")
+    assert idempotent_res.status_code == 200
+    assert idempotent_res.json()["unloaded_datasets"] == []
+    assert idempotent_res.json()["records_cleared"] == 0

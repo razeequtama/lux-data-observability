@@ -64,3 +64,12 @@ class LoadScenarioResponse(BaseModel):
     rules_registered: int = Field(..., description="Number of validation rules registered in DB")
     lineage_nodes_loaded: int = Field(..., description="Number of lineage DAG nodes loaded into DB")
     message: str = Field(..., description="Human-readable status summary")
+
+
+class UnloadScenarioResponse(BaseModel):
+    """Response payload returned when a scenario is successfully unloaded from SQLite."""
+
+    scenario_id: str = Field(..., description="Scenario identifier")
+    unloaded_datasets: list[str] = Field(..., description="List of unloaded dataset IDs")
+    records_cleared: int = Field(..., description="Total count of dataset records removed")
+    message: str = Field(..., description="Human-readable status summary")

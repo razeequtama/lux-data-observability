@@ -69,6 +69,20 @@ When an error occurs (HTTP 4xx or 5xx), the server returns a structured `ErrorRe
 }
 ```
 
+### 2.4 Unload Scenario
+- **Endpoint:** `POST /api/v1/scenarios/{id}/unload`
+- **Request Body:** None
+- **Response (200 OK):**
+```json
+{
+  "scenario_id": "monday_revenue_mystery",
+  "unloaded_datasets": ["orders", "order_items", "products", "inventory"],
+  "records_cleared": 5170,
+  "message": "Scenario 'Monday Revenue Mystery' unloaded successfully. 4 datasets and 5170 records cleared from workspace."
+}
+```
+*(Clears SQLite persistence for datasets, validation runs, pipeline runs, and lineage nodes while preserving underlying fixture files on disk completely intact).*
+
 ---
 
 ## 3. Datasets API

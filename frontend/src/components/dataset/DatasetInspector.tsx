@@ -1,13 +1,15 @@
 import React from 'react';
-import { Database, FileSpreadsheet, Eye, Upload, RefreshCw } from 'lucide-react';
+import { Database, FileSpreadsheet, Eye, Upload, RefreshCw, FolderX } from 'lucide-react';
 import { DatasetResponse } from '../../types';
 
 interface DatasetInspectorProps {
   datasets: DatasetResponse[];
   isLoading: boolean;
+  isUnloading?: boolean;
   onPreviewDataset: (dataset: DatasetResponse) => void;
   onOpenUpload: () => void;
   onRefresh: () => void;
+  onUnloadScenario?: () => void;
 }
 
 function formatBytes(bytes: number): string {
@@ -21,9 +23,11 @@ function formatBytes(bytes: number): string {
 export const DatasetInspector: React.FC<DatasetInspectorProps> = ({
   datasets,
   isLoading,
+  isUnloading = false,
   onPreviewDataset,
   onOpenUpload,
   onRefresh,
+  onUnloadScenario,
 }) => {
   return (
     <div
@@ -53,7 +57,7 @@ export const DatasetInspector: React.FC<DatasetInspectorProps> = ({
           <button
             type="button"
             onClick={onRefresh}
-            disabled={isLoading}
+            disabled={isLoading || isUnloading}
             aria-label="Refresh datasets"
             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
             title="Refresh datasets"
@@ -69,6 +73,19 @@ export const DatasetInspector: React.FC<DatasetInspectorProps> = ({
             <Upload className="w-3.5 h-3.5 text-lux-400" />
             <span>Upload Dataset</span>
           </button>
+          {onUnloadScenario && datasets.length > 0 && (
+            <button
+              type="button"
+              onClick={onUnloadScenario}
+              disabled={isLoading || isUnloading}
+              data-testid="dataset-inspector-unload-btn"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-slate-800 hover:bg-rose-950/60 active:bg-rose-900/80 text-slate-300 hover:text-rose-200 border border-slate-700 hover:border-rose-700/60 rounded-lg text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+              title="Unload scenario datasets and reset workspace"
+            >
+              <FolderX className={`w-3.5 h-3.5 text-rose-400 ${isUnloading ? 'animate-pulse' : ''}`} />
+              <span>{isUnloading ? 'Unloading...' : 'Unload Scenario'}</span>
+            </button>
+          )}
         </div>
       </div>
 

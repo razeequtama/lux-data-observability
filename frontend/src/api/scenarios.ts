@@ -9,6 +9,7 @@ import {
   LoadScenarioResponse,
   ScenarioDetail,
   ScenarioSummary,
+  UnloadScenarioResponse,
 } from '../types';
 
 export async function listScenarios(): Promise<ScenarioSummary[]> {
@@ -29,4 +30,13 @@ export async function loadScenario(
     payload
   );
 }
+
+export async function unloadScenario(
+  scenarioId: string
+): Promise<UnloadScenarioResponse> {
+  return apiPost<UnloadScenarioResponse>(
+    `/scenarios/${encodeURIComponent(scenarioId)}/unload`
+  );
+}
+
 

@@ -9,6 +9,7 @@ from app.schemas.scenario import (
     LoadScenarioResponse,
     ScenarioDetail,
     ScenarioSummary,
+    UnloadScenarioResponse,
 )
 from app.services.ingestion.loader import ScenarioLoaderService
 
@@ -58,5 +59,26 @@ def load_scenario(
     return ScenarioLoaderService.load_scenario(
         scenario_id=scenario_id,
         fixture_version=fixture_version,
+        db=db,
+    )
+
+
+@router.post(
+    "/{scenario_id}/unload",
+    response_model=UnloadScenarioResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Unload Scenario Fixtures",
+    description=(
+        "Unload scenario datasets, rules, lineage DAG, and pipeline history from SQLite. "
+        "Underlying fixture files on disk are not altered."
+    ),
+)
+def unload_scenario(
+    scenario_id: str,
+    db: Session = Depends(get_db),
+) -> UnloadScenarioResponse:
+    """Unload scenario datasets and dependent data without modifying fixture files."""
+    return ScenarioLoaderService.unload_scenario(
+        scenario_id=scenario_id,
         db=db,
     )

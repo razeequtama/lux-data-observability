@@ -137,5 +137,26 @@ describe('DatasetInspector Component', () => {
       screen.getByText(/No datasets found for this scenario/i)
     ).toBeInTheDocument();
   });
+
+  it('renders "Unload Scenario" button and calls onUnloadScenario when clicked', () => {
+    const handleUnloadScenario = vi.fn();
+    render(
+      <DatasetInspector
+        datasets={mockDatasets}
+        isLoading={false}
+        isUnloading={false}
+        onPreviewDataset={vi.fn()}
+        onOpenUpload={vi.fn()}
+        onRefresh={vi.fn()}
+        onUnloadScenario={handleUnloadScenario}
+      />
+    );
+
+    const unloadBtn = screen.getByTestId('dataset-inspector-unload-btn');
+    expect(unloadBtn).toBeInTheDocument();
+    fireEvent.click(unloadBtn);
+    expect(handleUnloadScenario).toHaveBeenCalledTimes(1);
+  });
 });
+
 

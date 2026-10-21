@@ -12,6 +12,7 @@ import { InvestigationWorkspace } from './components/reports';
 import {
   listScenarios,
   loadScenario,
+  unloadScenario,
   listDatasets,
 } from './api';
 import {
@@ -35,6 +36,7 @@ export const App: React.FC = () => {
   const [previewingDataset, setPreviewingDataset] = useState<DatasetResponse | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isLoadingScenario, setIsLoadingScenario] = useState(false);
+  const [isUnloadingScenario, setIsUnloadingScenario] = useState(false);
   const [isLoadingDatasets, setIsLoadingDatasets] = useState(false);
   const [selectedFindingForImpact, setSelectedFindingForImpact] = useState<ValidationFindingItem | null>(null);
   const [selectedLineageNodeId, setSelectedLineageNodeId] = useState<string | null>(null);
@@ -113,6 +115,29 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleUnloadScenario = async (scenarioId: string) => {
+    setIsUnloadingScenario(true);
+    setAlert(null);
+    try {
+      const res = await unloadScenario(scenarioId);
+      setAlert({
+        type: 'info',
+        message: 'Scenario Unloaded',
+        details: res.message,
+      });
+      await fetchDatasets(scenarioId);
+      await fetchScenarios();
+    } catch (err) {
+      setAlert({
+        type: 'error',
+        message: 'Failed to Unload Scenario',
+        details: err instanceof Error ? err.message : 'Unknown network error unloading scenario.',
+      });
+    } finally {
+      setIsUnloadingScenario(false);
+    }
+  };
+
   const handleUploadSuccess = async (uploaded: DatasetUploadResponse) => {
     setAlert({
       type: 'success',
@@ -132,9 +157,11 @@ export const App: React.FC = () => {
         activeScenarioId={activeScenarioId}
         activeFixtureVersion={activeFixtureVersion}
         isLoadingScenario={isLoadingScenario}
+        isUnloadingScenario={isUnloadingScenario}
         onSelectScenario={handleSelectScenario}
         onSelectFixtureVersion={handleSelectFixtureVersion}
         onLoadScenario={handleLoadScenario}
+        onUnloadScenario={handleUnloadScenario}
         onOpenUpload={() => setIsUploadModalOpen(true)}
         datasetsCount={datasets.length}
         isDatasetInspectorOpen={isDatasetInspectorOpen}
@@ -161,9 +188,11 @@ export const App: React.FC = () => {
             <DatasetInspector
               datasets={datasets}
               isLoading={isLoadingDatasets}
+              isUnloading={isUnloadingScenario}
               onPreviewDataset={(dataset) => setPreviewingDataset(dataset)}
               onOpenUpload={() => setIsUploadModalOpen(true)}
               onRefresh={() => fetchDatasets(activeScenarioId)}
+              onUnloadScenario={() => handleUnloadScenario(activeScenarioId)}
             />
           </section>
         )}

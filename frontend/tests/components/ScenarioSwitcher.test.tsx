@@ -127,5 +127,51 @@ describe('ScenarioSwitcher Component', () => {
     expect(screen.getByTestId('load-scenario-btn')).toBeDisabled();
     expect(screen.getByText('Loading Fixtures...')).toBeInTheDocument();
   });
+
+  it('renders "Unload Scenario" button and calls onUnloadScenario when clicked', () => {
+    const handleUnloadScenario = vi.fn();
+    render(
+      <ScenarioSwitcher
+        scenarios={mockScenarios}
+        activeScenarioId="monday_revenue_mystery"
+        activeFixtureVersion="defective"
+        isLoading={false}
+        isUnloading={false}
+        onSelectScenario={vi.fn()}
+        onSelectFixtureVersion={vi.fn()}
+        onLoadScenario={vi.fn()}
+        onUnloadScenario={handleUnloadScenario}
+      />
+    );
+
+    const unloadBtn = screen.getByTestId('unload-scenario-btn');
+    expect(unloadBtn).toBeInTheDocument();
+    expect(screen.getByText('Unload Scenario')).toBeInTheDocument();
+
+    fireEvent.click(unloadBtn);
+    expect(handleUnloadScenario).toHaveBeenCalledWith('monday_revenue_mystery');
+  });
+
+  it('disables controls while unloading', () => {
+    render(
+      <ScenarioSwitcher
+        scenarios={mockScenarios}
+        activeScenarioId="monday_revenue_mystery"
+        activeFixtureVersion="defective"
+        isLoading={false}
+        isUnloading={true}
+        onSelectScenario={vi.fn()}
+        onSelectFixtureVersion={vi.fn()}
+        onLoadScenario={vi.fn()}
+        onUnloadScenario={vi.fn()}
+      />
+    );
+
+    expect(screen.getByTestId('scenario-select')).toBeDisabled();
+    expect(screen.getByTestId('load-scenario-btn')).toBeDisabled();
+    expect(screen.getByTestId('unload-scenario-btn')).toBeDisabled();
+    expect(screen.getByText('Unloading...')).toBeInTheDocument();
+  });
 });
+
 

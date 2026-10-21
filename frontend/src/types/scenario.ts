@@ -36,3 +36,11 @@ export interface LoadScenarioResponse {
   message: string;
 }
 
+export interface UnloadScenarioResponse {
+  scenario_id: string;
+  unloaded_datasets: string[];
+  records_cleared: number;
+  message: string;
+}
+
+

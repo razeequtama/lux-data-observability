@@ -17,9 +17,11 @@ interface AppHeaderProps {
   activeScenarioId: string;
   activeFixtureVersion: FixtureVersion;
   isLoadingScenario: boolean;
+  isUnloadingScenario?: boolean;
   onSelectScenario: (scenarioId: string) => void;
   onSelectFixtureVersion: (version: FixtureVersion) => void;
   onLoadScenario: (scenarioId: string, version: FixtureVersion) => void;
+  onUnloadScenario?: (scenarioId: string) => void;
   onOpenUpload: () => void;
   datasetsCount: number;
   isDatasetInspectorOpen: boolean;
@@ -33,9 +35,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   activeScenarioId,
   activeFixtureVersion,
   isLoadingScenario,
+  isUnloadingScenario = false,
   onSelectScenario,
   onSelectFixtureVersion,
   onLoadScenario,
+  onUnloadScenario,
   onOpenUpload,
   datasetsCount,
   isDatasetInspectorOpen,
@@ -76,9 +80,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               activeScenarioId={activeScenarioId}
               activeFixtureVersion={activeFixtureVersion}
               isLoading={isLoadingScenario}
+              isUnloading={isUnloadingScenario}
               onSelectScenario={onSelectScenario}
               onSelectFixtureVersion={onSelectFixtureVersion}
               onLoadScenario={onLoadScenario}
+              onUnloadScenario={onUnloadScenario}
             />
 
             {/* Active Scenario Badge */}

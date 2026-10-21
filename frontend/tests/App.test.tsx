@@ -223,6 +223,31 @@ describe('Lux App Shell Component', () => {
     });
   });
 
+  it('triggers scenario unloading when Unload Scenario is clicked', async () => {
+    const mockUnloadResponse = {
+      scenario_id: 'monday_revenue_mystery',
+      unloaded_datasets: ['orders', 'order_items'],
+      records_cleared: 4670,
+      message: 'Scenario "Monday Revenue Mystery" unloaded successfully.',
+    };
+    vi.spyOn(scenariosApi, 'unloadScenario').mockResolvedValueOnce(mockUnloadResponse);
+
+    await renderApp();
+
+    const unloadBtn = screen.getByTestId('unload-scenario-btn');
+    expect(unloadBtn).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(unloadBtn);
+    });
+
+    await waitFor(() => {
+      expect(scenariosApi.unloadScenario).toHaveBeenCalledWith('monday_revenue_mystery');
+      expect(screen.getByText('Scenario Unloaded')).toBeInTheDocument();
+    });
+  });
+
+
   it('toggles dataset inspector visibility', async () => {
     await renderApp();
 

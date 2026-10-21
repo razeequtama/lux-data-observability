@@ -20,6 +20,7 @@ from app.schemas.scenario import (
     LoadScenarioResponse,
     ScenarioDetail,
     ScenarioSummary,
+    UnloadScenarioResponse,
 )
 from app.services.ingestion.reader import DatasetReader
 from app.services.pipeline.freshness import FreshnessService
@@ -387,5 +388,57 @@ class ScenarioLoaderService:
             lineage_nodes_loaded=lineage_nodes_loaded,
             message=(
                 f"Scenario '{scenario_title}' loaded successfully with {fixture_version} fixtures."
+            ),
+        )
+
+    @staticmethod
+    def unload_scenario(scenario_id: str, db: Session) -> UnloadScenarioResponse:
+        """Unload scenario datasets, rules, lineage DAG, and pipeline history from SQLite.
+
+        Cleans up in-memory/database state for the scenario when a user cancels usage
+        of the provided CSV files. Crucially, underlying fixture CSV files on disk are
+        never deleted, modified, or altered.
+        """
+        # Query existing datasets to determine unloaded dataset IDs and record count
+        existing_datasets = (
+            db.execute(select(Dataset).where(Dataset.scenario_id == scenario_id)).scalars().all()
+        )
+        unloaded_datasets = [d.id for d in existing_datasets]
+        total_records = sum(d.record_count for d in existing_datasets)
+
+        # Clean existing dependent records from SQLite
+        val_run_ids = select(ValidationRun.id).where(ValidationRun.scenario_id == scenario_id)
+        db.execute(delete(ValidationFinding).where(ValidationFinding.run_id.in_(val_run_ids)))
+        db.execute(delete(ValidationRun).where(ValidationRun.scenario_id == scenario_id))
+        db.execute(delete(ReportArtifact).where(ReportArtifact.scenario_id == scenario_id))
+        db.execute(delete(Investigation).where(Investigation.scenario_id == scenario_id))
+        db.execute(delete(FreshnessCheck).where(FreshnessCheck.scenario_id == scenario_id))
+        db.execute(delete(PipelineRun).where(PipelineRun.scenario_id == scenario_id))
+        db.execute(delete(LineageEdge).where(LineageEdge.scenario_id == scenario_id))
+        db.execute(delete(LineageNode).where(LineageNode.scenario_id == scenario_id))
+        db.execute(delete(ValidationRule).where(ValidationRule.scenario_id == scenario_id))
+        db.execute(delete(Dataset).where(Dataset.scenario_id == scenario_id))
+        db.execute(delete(Scenario).where(Scenario.id == scenario_id))
+
+        db.commit()
+
+        # Try to retrieve scenario name from scenario.json if present for friendly message
+        scenario_title = scenario_id
+        scenario_json_path = settings.scenarios_dir / scenario_id / "scenario.json"
+        if scenario_json_path.exists():
+            try:
+                with open(scenario_json_path, encoding="utf-8") as f:
+                    scenario_title = json.load(f).get("name", scenario_id)
+            except Exception:
+                pass
+
+        return UnloadScenarioResponse(
+            scenario_id=scenario_id,
+            unloaded_datasets=unloaded_datasets,
+            records_cleared=total_records,
+            message=(
+                f"Scenario '{scenario_title}' unloaded successfully. "
+                f"{len(unloaded_datasets)} datasets and {total_records} "
+                "records cleared from workspace."
             ),
         )
