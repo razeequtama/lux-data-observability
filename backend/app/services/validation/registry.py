@@ -16,6 +16,12 @@ from app.services.validation.core import (
     UniquenessRule,
     ValueRangeRule,
 )
+from app.services.validation.relational import (
+    FreshnessRule,
+    ReferentialIntegrityRule,
+    SchemaIntegrityRule,
+    TemporalAnomalyRule,
+)
 
 
 class RuleRegistry:
@@ -137,3 +143,9 @@ RuleRegistry.register(RuleCategory.UNIQUENESS, UniquenessRule)
 RuleRegistry.register(RuleCategory.TYPE_VALIDITY, TypeValidityRule)
 RuleRegistry.register(RuleCategory.RECORD_COUNT, RecordCountRule)
 RuleRegistry.register(RuleCategory.VALUE_RANGE, ValueRangeRule)
+
+# Register Relational, Temporal, Schema, and Freshness Evaluators
+RuleRegistry.register(RuleCategory.REFERENTIAL_INTEGRITY, ReferentialIntegrityRule)
+RuleRegistry.register(RuleCategory.TEMPORAL_ANOMALY, TemporalAnomalyRule)
+RuleRegistry.register(RuleCategory.SCHEMA_INTEGRITY, SchemaIntegrityRule)
+RuleRegistry.register(RuleCategory.FRESHNESS, FreshnessRule)

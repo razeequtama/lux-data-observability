@@ -30,7 +30,7 @@ This document is the single source of truth for implementation tracking across e
 | `T04` | Bundled Signature Fixtures & Scenario Metadata Definition | None | `COMPLETED` | `pytest tests/unit/test_fixtures.py` 8 passed; 1,250 orders, 3,420 items, 250 prods, 250 inv; 15 dups, 24 orphaned, 8 neg inv, 1 temporal gap verified |
 | `T05` | Dataset Ingestion, Scenario Loader & Upload Security Service | `T01`, `T03`, `T04` | `COMPLETED` | `pytest tests/integration/test_ingestion_api.py` 14 passed; `pytest` 43 passed; `ruff` and `mypy` 0 errors; load scenario (200), preview, 20MB limit (413), and path traversal rejection (400) verified |
 | `T06` | Validation Rule Framework & Core Rule Evaluators | `T01`, `T03` | `COMPLETED` | `pytest tests/unit/test_rules_core.py` 38 passed; full `pytest` 81 passed; `ruff` and `mypy` 0 errors; detected 15 duplicates in orders.csv and 8 negative inventory SKUs in inventory.csv |
-| `T07` | Relational, Temporal & Schema Rule Evaluators | `T06` | `NOT_STARTED` | — |
+| `T07` | Relational, Temporal & Schema Rule Evaluators | `T06` | `COMPLETED` | `pytest tests/unit/test_rules_relational.py` 25 passed; full `pytest` 106 passed; `ruff` and `mypy` 0 errors; detected 24 orphaned items in order_items.csv and Sunday 4.47h gap in orders.csv; clean recovery verified |
 | `T08` | Validation Runner Service, Persistence & Structured Findings API | `T03`, `T05`, `T06`, `T07` | `NOT_STARTED` | — |
 | `T09` | Lineage DAG Domain Engine & Graph Integrity Validator | `T01`, `T03` | `NOT_STARTED` | — |
 | `T10` | Downstream Impact Analysis Engine & Blast Radius Classifier | `T08`, `T09` | `NOT_STARTED` | — |
@@ -53,9 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestone **M0** (`T01`, `T02`) and Milestone **M1** (`T03`, `T04`, `T05`) are `COMPLETED`. Milestone **M2** is `IN_PROGRESS` with `T06` verified.
+- **Current State:** Milestone **M0** (`T01`, `T02`) and Milestone **M1** (`T03`, `T04`, `T05`) are `COMPLETED`. Milestone **M2** is `IN_PROGRESS` with `T06` and `T07` verified.
 - **Next Eligible Tasks:**
-  - `T07` (Relational, Temporal & Schema Rule Evaluators) — Prerequisite satisfied (`T06`). Continues Milestone **M2**.
+  - `T08` (Validation Runner Service, Persistence & Structured Findings API) — Prerequisites satisfied (`T03`, `T05`, `T06`, `T07`). Concludes Milestone **M2**.
   - `T09` (Lineage DAG Domain Engine & Graph Integrity Validator) — Prerequisites satisfied (`T01`, `T03`). Initiates Milestone **M3**.
 
 ---
@@ -204,4 +204,32 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && mypy app` -> Success: no issues found in 41 source files.
   - `cd frontend && npx vitest run` -> 6/6 passed in 612ms (zero frontend regressions).
 - **Remaining Limitations:** None. Core validation framework and evaluators are operational and tested. Ready for advanced relational, temporal, and schema evaluators (`T07`).
+
+### `T07` — Relational, Temporal & Schema Rule Evaluators
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/services/validation/base.py`:
+    - Enhanced `ValidationContext` with `get_dataset_records(target_dataset_id)` and `get_dataset_records_as_list(target_dataset_id)` supporting cross-dataset resolution across in-memory datasets, `ValidationContext` instances, explicit file paths, and sibling directory resolutions.
+  - `backend/app/services/validation/relational.py`: Advanced rule evaluators:
+    - `ReferentialIntegrityRule`: Validates foreign key relationships across datasets using in-memory set lookups ($O(1)$ complexity) for single and composite foreign keys, configurable `allow_null` behavior, sample orphaned keys collection, and detailed violation payloads.
+    - `TemporalAnomalyRule`: Parses ISO-8601 timestamps, detects future timestamps against reference time, enforces `min_date` and `max_date` bounds, and scans for chronological temporal gaps exceeding configurable `max_gap_hours`.
+    - `SchemaIntegrityRule`: Asserts column existence, detects missing expected columns, rejects unexpected columns when `allow_extra_columns=False`, enforces column ordering when `strict_order=True`, and samples rows to identify data type drift across integer, float, boolean, and timestamp columns.
+    - `FreshnessRule`: Evaluates partition recency against SLA thresholds (`sla_hours`), detects missing transaction windows via `max_gap_hours`, and computes status (`FRESH` vs `STALE`).
+  - `backend/app/services/validation/registry.py`:
+    - Registered all four advanced evaluators into `RuleRegistry` for categories `REFERENTIAL_INTEGRITY`, `TEMPORAL_ANOMALY`, `SCHEMA_INTEGRITY`, and `FRESHNESS`.
+  - `backend/app/services/validation/__init__.py`:
+    - Exported all new rule evaluators in public package interface.
+  - `backend/tests/unit/test_rules_relational.py`:
+    - 25-test comprehensive unit suite validating all 4 evaluators, composite keys, null handling, type drift, and signature scenario acceptance criteria.
+- **Verification Evidence:**
+  - `ReferentialIntegrityRule` on defective `order_items.csv` vs `products.csv`: Accurately detected all 24 orphaned records (`PRD-9001` through `PRD-9024`), with parent key count 250 and total 3,420 records evaluated. Passed with 0 orphaned items on corrected fixtures.
+  - `TemporalAnomalyRule` on defective `orders.csv`: Accurately detected Sunday evening temporal gap (from 2026-10-18T17:58:01 to 2026-10-18T22:26:00, 4.47 hours > 4.0h threshold). Passed on corrected `orders.csv` (max observed gap 0.68 hours).
+  - `FreshnessRule` on `VAL-FRESH-001`: Accurately flagged defective `orders.csv` as `STALE` due to 4.47h gap > 4h threshold. Passed with `FRESH` status on corrected `orders.csv`.
+  - `cd backend && pytest tests/unit/test_rules_relational.py -v` -> 25 passed in 0.33s.
+  - `cd backend && pytest` -> 106 passed in 4.28s (all test suites passing).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 55 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 42 source files.
+  - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 975ms (zero frontend regressions).
+- **Remaining Limitations:** None. Relational, temporal, schema, and freshness evaluators are fully operational and verified. Ready for the validation runner service and structured findings API (`T08`).
 

@@ -29,7 +29,7 @@ class ValidationContext:
         file_format: str = "csv",
         scenario_id: str | None = None,
         total_record_count: int | None = None,
-        datasets: dict[str, list[dict[str, Any]]] | None = None,
+        datasets: dict[str, Any] | None = None,
     ) -> None:
         self.dataset_id = dataset_id
         self._records = records
@@ -37,7 +37,7 @@ class ValidationContext:
         self.file_format = file_format.lower()
         self.scenario_id = scenario_id
         self._total_record_count = total_record_count
-        self.datasets = datasets or {}
+        self.datasets: dict[str, Any] = datasets or {}
 
     def get_records(self) -> Iterable[dict[str, Any]]:
         """Yield records either from in-memory list or streamed from file."""
@@ -81,6 +81,51 @@ class ValidationContext:
         # Materialize or count from stream
         records = self.get_records_as_list()
         return len(records)
+
+    def get_dataset_records(self, target_dataset_id: str) -> Iterable[dict[str, Any]]:
+        """Retrieve records for a named dataset (for cross-dataset validation)."""
+        # If target dataset is the primary dataset itself
+        if target_dataset_id == self.dataset_id:
+            yield from self.get_records()
+            return
+
+        # Check explicitly provided datasets mapping
+        if self.datasets and target_dataset_id in self.datasets:
+            ds = self.datasets[target_dataset_id]
+            if isinstance(ds, list):
+                yield from ds
+                return
+            if isinstance(ds, ValidationContext):
+                yield from ds.get_records()
+                return
+            if isinstance(ds, (Path, str)):
+                p = Path(ds)
+                if p.exists():
+                    sub_ctx = ValidationContext(
+                        dataset_id=target_dataset_id,
+                        file_path=p,
+                        file_format=p.suffix.lstrip(".").lower(),
+                    )
+                    yield from sub_ctx.get_records()
+                    return
+
+        # Fallback to sibling file in same directory if primary file_path exists
+        if self.file_path is not None and self.file_path.exists():
+            parent_dir = self.file_path.parent
+            for ext in [".csv", ".json"]:
+                candidate = parent_dir / f"{target_dataset_id}{ext}"
+                if candidate.exists():
+                    sub_ctx = ValidationContext(
+                        dataset_id=target_dataset_id,
+                        file_path=candidate,
+                        file_format=ext.lstrip(".").lower(),
+                    )
+                    yield from sub_ctx.get_records()
+                    return
+
+    def get_dataset_records_as_list(self, target_dataset_id: str) -> list[dict[str, Any]]:
+        """Retrieve records for a named dataset as a materialized list."""
+        return list(self.get_dataset_records(target_dataset_id))
 
 
 class BaseValidationRule(ABC):
@@ -192,4 +237,3 @@ class BaseValidationRule(ABC):
             evidence=evidence or {},
             execution_duration_ms=duration_ms,
         )
-
