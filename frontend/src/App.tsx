@@ -7,6 +7,8 @@ import { DatasetPreviewModal } from './components/dataset/DatasetPreviewModal';
 import { UploadModal } from './components/dataset/UploadModal';
 import { ValidationView } from './components/validation/ValidationView';
 import { LineageView } from './components/lineage/LineageView';
+import { PipelineObservabilityView } from './components/pipeline';
+import { InvestigationWorkspace } from './components/reports';
 import {
   listScenarios,
   loadScenario,
@@ -213,6 +215,32 @@ export const App: React.FC = () => {
               initialTargetFinding={selectedFindingForImpact}
               onSelectNode={(nodeId) => {
                 setSelectedLineageNodeId(nodeId);
+              }}
+            />
+          ) : activeTab === 'pipelines' ? (
+            <PipelineObservabilityView
+              scenarioId={activeScenarioId}
+              onTraceImpact={() => {
+                setSelectedLineageNodeId('src_orders');
+                setSelectedFindingForImpact(null);
+                setActiveTab('lineage');
+                setAlert({
+                  type: 'info',
+                  message: 'Tracing Impact from Pipeline Anomaly',
+                  details:
+                    'Highlighting downstream blast radius from src_orders across ETL transformations to Executive Dashboard.',
+                });
+              }}
+            />
+          ) : activeTab === 'investigation' ? (
+            <InvestigationWorkspace
+              scenarioId={activeScenarioId}
+              onNavigateToLineage={(nodeId) => {
+                setSelectedLineageNodeId(nodeId || null);
+                setActiveTab('lineage');
+              }}
+              onNavigateToValidations={() => {
+                setActiveTab('validations');
               }}
             />
           ) : (

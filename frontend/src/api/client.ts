@@ -112,6 +112,76 @@ export async function apiPost<T>(endpoint: string, body?: unknown): Promise<T> {
   }
 }
 
+export async function apiPatch<T>(endpoint: string, body?: unknown): Promise<T> {
+  const url = resolveUrl(endpoint);
+  try {
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    return await handleResponse<T>(response);
+  } catch (error) {
+    if (error instanceof ApiClientError) {
+      throw error;
+    }
+    throw new ApiClientError(0, error instanceof Error ? error.message : 'Network connection failed', 'NETWORK_ERROR');
+  }
+}
+
+export async function apiDelete<T = void>(endpoint: string): Promise<T> {
+  const url = resolveUrl(endpoint);
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+    if (response.status === 204) {
+      return undefined as unknown as T;
+    }
+    return await handleResponse<T>(response);
+  } catch (error) {
+    if (error instanceof ApiClientError) {
+      throw error;
+    }
+    throw new ApiClientError(0, error instanceof Error ? error.message : 'Network connection failed', 'NETWORK_ERROR');
+  }
+}
+
+export async function apiGetText(
+  endpoint: string,
+  params?: Record<string, string | number | boolean | undefined>
+): Promise<string> {
+  const url = resolveUrl(endpoint, params);
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: '*/*',
+      },
+    });
+    if (!response.ok) {
+      const text = await response.text().catch(() => '');
+      throw new ApiClientError(
+        response.status,
+        text || `Request failed with status ${response.status}`,
+        `HTTP_${response.status}`
+      );
+    }
+    return await response.text();
+  } catch (error) {
+    if (error instanceof ApiClientError) {
+      throw error;
+    }
+    throw new ApiClientError(0, error instanceof Error ? error.message : 'Network connection failed', 'NETWORK_ERROR');
+  }
+}
+
 export async function apiUpload<T>(endpoint: string, formData: FormData): Promise<T> {
   const url = resolveUrl(endpoint);
   try {

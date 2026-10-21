@@ -4,3 +4,6 @@ export * from './dataset';
 export * from './validation';
 export * from './lineage';
 export * from './impact';
+export * from './pipeline';
+export * from './investigation';
+export * from './report';

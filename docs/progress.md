@@ -14,7 +14,7 @@ This document is the single source of truth for implementation tracking across e
 | **M3** | Lineage DAG Domain Engine & Graph Integrity Validator | `T09`, `T10`, `T11` | `COMPLETED` |
 | **M4** | Pipeline Observability & Run History | `T12`, `T13` | `COMPLETED` |
 | **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `COMPLETED` |
-| **M6** | Frontend "Trace the Failure" Interactive UI | `T16`, `T17`, `T18`, `T19`, `T20` | `IN_PROGRESS` |
+| **M6** | Frontend "Trace the Failure" Interactive UI | `T16`, `T17`, `T18`, `T19`, `T20` | `COMPLETED` |
 | **M7** | Recovery Verification & End-to-End Acceptance | `T21`, `T22`, `T23` | `NOT_STARTED` |
 | **M8** | Containerization & Operational Polish | `T24` | `NOT_STARTED` |
 
@@ -42,8 +42,8 @@ This document is the single source of truth for implementation tracking across e
 | `T16` | Frontend Navigation Shell, Scenario Switcher & Dataset Inspector | `T02`, `T05` | `COMPLETED` | `vitest` 34 passed (6 test files); `tsc` & `eslint` 0 errors; production build verified (186.84 kB); scenario switcher, dataset inspector, paginated preview modal, and drag-and-drop upload with 20MB limit verified |
 | `T17` | Quality Validation Findings Explorer & Evidence Drawer UI | `T08`, `T16` | `COMPLETED` | `vitest` 62 passed (11 test files); `tsc` & `eslint` 0 errors; production build verified (229.35 kB); summary cards, severity/status filters, CRITICAL isolation of duplicate orders, slide-over evidence drawer with focus trap & sample row line numbers, and Trace Impact action verified |
 | `T18` | Interactive Lineage DAG & Blast Radius Visualization UI | `T11`, `T16` | `COMPLETED` | `vitest` 83 passed (15 test files); `tsc` & `eslint` 0 errors; production build verified (451.95 kB); all 16 nodes rendered with Dagre coordinates, custom dual-status chips (Compute Exit 0 vs Quality Corrupted), selecting src_orders highlights downstream blast radius through to report_exec_dash, and NodeDetailsPanel verified |
-| `T19` | Pipeline Observability, Freshness & Run History UI | `T12`, `T13`, `T16` | `NOT_STARTED` | — |
-| `T20` | Investigation Workspace & Report Export Modal UI | `T15`, `T17`, `T18` | `NOT_STARTED` | — |
+| `T19` | Pipeline Observability, Freshness & Run History UI | `T12`, `T13`, `T16` | `COMPLETED` | `vitest` 108 passed (20 test files); `tsc` & `eslint` 0 errors; production build verified (480.13 kB); overnight run verified with `COMPLETED_SUCCESS` compute badge alongside `CORRUPTED` data health badge; `orders.csv` partition staleness (5.99h behind SLA) and dual-dimension callout verified |
+| `T20` | Investigation Workspace & Report Export Modal UI | `T15`, `T17`, `T18` | `COMPLETED` | `vitest` 128 passed (24 test files); `tsc` & `eslint` 0 errors; production build verified (514.83 kB); 3 boundary zones (facts, hypotheses, actions), automatic synthesis from findings & pipeline, report generation with sandboxed HTML iframe & formatted JSON preview, direct file downloads with blob URL memory cleanup verified |
 | `T21` | Recovery Verification Backend Engine | `T08`, `T10`, `T12` | `NOT_STARTED` | — |
 | `T22` | Recovery Verification Frontend View | `T20`, `T21` | `NOT_STARTED` | — |
 | `T23` | Signature Scenario End-to-End Test Suite | `T01`–`T22` | `NOT_STARTED` | — |
@@ -53,10 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), and **M5** (`T14`, `T15`) are `COMPLETED`. Milestone **M6** is `IN_PROGRESS` with `T16`, `T17`, and `T18` `COMPLETED`.
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), **M5** (`T14`, `T15`), and **M6** (`T16`, `T17`, `T18`, `T19`, `T20`) are `COMPLETED`. Milestone **M7** (Recovery Verification & End-to-End Acceptance) is ready to begin.
 - **Next Eligible Tasks:**
-  - `T19` (Pipeline Observability, Freshness & Run History UI) — Prerequisites satisfied (`T12`, `T13`, `T16`). Continues Milestone **M6** (Frontend "Trace the Failure" Interactive UI).
-  - `T20` (Investigation Workspace & Report Export Modal UI) — Prerequisites satisfied (`T15`, `T17`, `T18`). Continues Milestone **M6**.
+  - `T21` (Recovery Verification Backend Engine) — Prerequisites satisfied (`T08`, `T10`, `T12`). Begins Milestone **M7** (Recovery Verification & End-to-End Acceptance).
 
 ---
 
@@ -694,6 +693,109 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && ruff format --check .` -> 86 files already formatted.
   - `cd backend && mypy app` -> Success: no issues found in 61 source files.
 - **Remaining Limitations:** None. Interactive Lineage DAG and Blast Radius visualizer is fully implemented and tested with authentic graph data and traversal. Ready for `T19` (Pipeline Observability, Freshness & Run History UI).
+
+### `T19` — Pipeline Observability, Freshness & Run History UI
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `frontend/src/types/pipeline.ts`:
+    - Domain types for `PipelineExecutionStatus`, `FreshnessStatus`, `PipelineStepLog`, `PipelineRun`, and `FreshnessCheck`.
+    - Integrated with `QualityHealthStatus` in `frontend/src/types/common.ts` and re-exported in `frontend/src/types/index.ts`.
+  - `frontend/src/api/pipelines.ts`:
+    - `listPipelineRuns`: Fetches historical runs with duration, record counts, step logs, and dual-dimension status.
+    - `getPipelineRun`: Fetches detailed metrics and step logs for an individual run ID.
+    - `getPipelineFreshness`: Fetches partition freshness checkpoints comparing expected SLA cutoffs against observed partition timestamps.
+    - Exported via `frontend/src/api/index.ts`.
+  - `frontend/src/components/pipeline/DualStatusCallout.tsx`:
+    - Prominent ADR-006 visual callout: *"Execution Succeeded (Exit 0) but Data Quality is Corrupted"*.
+    - Explicitly surfaces the compute vs quality health divergence (`COMPLETED_SUCCESS` exit 0 badge alongside `CORRUPTED` data health badge).
+    - Summarizes the introduced defects (15 duplicate orders, 24 orphaned items, 5.99h Sunday ingestion gap) with quick actions to view step logs or trace blast radius in Lineage.
+  - `frontend/src/components/pipeline/PipelineHistoryTimeline.tsx`:
+    - Summary metrics cards (historical run count, compute success rate 100%, healthy runs count, corrupted runs count).
+    - Chronological run cards with relative duration bar charts comparing execution times.
+    - Interactive collapsible step logs table displaying step names (`extract_sources`, `transform_clean_orders`, `transform_order_line_items`, `aggregate_daily_revenue`), success status badges, record counts, and execution duration in milliseconds/seconds with proportional share bars.
+  - `frontend/src/components/pipeline/FreshnessView.tsx`:
+    - Partition freshness overview metrics (monitored partitions, SLA compliant, stale/breached, max lag).
+    - Status cards for dataset partitions (`orders.csv`, `inventory.csv`) displaying configured SLA hours (24h, 6h), expected cutoff timestamp, observed partition max timestamp, and evaluation time.
+    - Highlights SLA breaches with prominent staleness warning box (e.g. `orders.csv` is 5.99 hours behind schedule).
+  - `frontend/src/components/pipeline/PipelineObservabilityView.tsx`:
+    - Container view coordinating sub-navigation tabs ("All Observability", "Run History", "Partition Freshness").
+    - Synchronizes runs and freshness data with loading spinners, refresh trigger, and error handling.
+  - `frontend/src/App.tsx`:
+    - Mounted `PipelineObservabilityView` in the `pipelines` tab with seamless integration into the active scenario.
+    - Connected "Trace Blast Radius" from the dual-dimension anomaly callout to automatically navigate to the Lineage tab with `src_orders` highlighted.
+  - `frontend/tests/`:
+    - `tests/api/pipelines.test.ts`: 3 unit tests verifying runs listing, single run retrieval, and freshness check API calls.
+    - `tests/components/DualStatusCallout.test.tsx`: 5 component tests verifying callout text, dual-dimension badges, button callbacks, and dismissal for healthy runs.
+    - `tests/components/PipelineHistoryTimeline.test.tsx`: 6 component tests verifying summary cards, step logs expansion/collapse, empty states, and Acceptance Criterion 1 (rendering overnight run with `SUCCESS` compute badge alongside `CORRUPTED` data health badge).
+    - `tests/components/FreshnessView.test.tsx`: 7 component tests verifying Acceptance Criterion 2 (`orders.csv` partition staleness with 5.99 hours behind SLA), configured SLA hours, timestamps, compliant inventory partition, and refresh action.
+    - `tests/components/PipelineObservabilityView.test.tsx`: 4 component tests verifying data synchronization, sub-tab switching, refresh refetching, and API error states.
+    - `tests/App.test.tsx`: Verified semantic navigation tab switching to the Pipelines workspace.
+- **Verification Evidence:**
+  - `cd frontend && npm test -- --run` (`vitest run`) -> 108 passed across 20 test files in 15.01s (100% pass rate).
+  - `cd frontend && npm run typecheck` (`tsc --noEmit`) -> 0 errors.
+  - `cd frontend && npm run lint` (`eslint .`) -> 0 warnings, 0 errors.
+  - `cd frontend && npm run build` (`tsc && vite build`) -> Built production bundle in 8.43s (HTML 1.01 kB, CSS 58.36 kB, JS 480.13 kB / gzip 138.86 kB).
+  - `cd backend && pytest` -> 235 passed across 19 test files in 16.31s (zero regressions).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 86 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 61 source files.
+- **Remaining Limitations:** None. Pipeline observability, dual-dimension status tracking, and partition freshness monitoring views are fully operational and verified. Ready for `T20` (Investigation Workspace & Report Export Modal UI).
+
+### `T20` — Investigation Workspace & Report Export Modal UI
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `frontend/src/api/client.ts`:
+    - Added `apiPatch`, `apiDelete`, and `apiGetText` methods with typed error handling and response unwrapping.
+  - `frontend/src/types/investigation.ts`:
+    - Domain types for `InvestigationStatus`, `InvestigationItemType`, `InvestigationItem`, `InvestigationResponse`, `InvestigationCreateRequest`, `InvestigationUpdateRequest`, and `InvestigationSynthesizeRequest`.
+  - `frontend/src/types/report.ts`:
+    - Domain types for `ReportFormat`, `ReportGenerateRequest`, `ReportGenerateResponse`, and `ReportArtifactResponse`.
+  - `frontend/src/api/investigations.ts`:
+    - `listInvestigations`: List workspaces by scenario and status.
+    - `getInvestigation`: Fetch workspace by ID.
+    - `createInvestigation`: Create workspace with facts, hypotheses, and action items.
+    - `updateInvestigation`: Patch title, status, facts, hypotheses, and action items.
+    - `deleteInvestigation`: Delete workspace by ID.
+    - `synthesizeInvestigation`: Synthesizes workspace automatically from validation findings, pipeline runs, and lineage blast radius.
+  - `frontend/src/api/reports.ts`:
+    - `generateReport`: Generate immutable JSON and safe styled standalone HTML incident reports.
+    - `exportReportArtifact`: Retrieve raw HTML or JSON report artifact content.
+    - `getReportArtifacts`: Retrieve metadata records for generated report artifacts.
+    - `listReportArtifacts`: List persisted report artifacts by scenario and investigation.
+  - `frontend/src/components/reports/download.ts`:
+    - Safe browser file download utility (`downloadFile`) creating a Blob URL and guaranteeing memory cleanup via `URL.revokeObjectURL(url)`.
+  - `frontend/src/components/reports/InvestigationWorkspace.tsx`:
+    - Enforces FR-06 and ADR-005 fact-hypothesis boundary separation across 3 dedicated architectural zones:
+      1. Confirmed Observations (Verified Facts) with ground-truth evidence cards, fact addition, and removal.
+      2. Working Hypotheses (Theories) with root-cause candidate tracking, addition, and removal.
+      3. Remediation Checklist (Action Items) with interactive completion toggles, addition, and removal.
+    - Quick metrics bar displaying verified facts count, hypotheses count, and action items completion ratio.
+    - Status pill dropdown (`OPEN`, `INVESTIGATING`, `RESOLVED`, `RECOVERED`, `CLOSED`).
+    - One-click "Synthesize Evidence" action automatically assembling workspace state from scenario validation runs, findings, and pipeline status.
+    - Direct cross-workspace jump links to "Inspect Lineage DAG" and "Inspect Quality Findings".
+  - `frontend/src/components/reports/ReportModal.tsx`:
+    - Report generation modal with title customization and pre-flight item count checks.
+    - In-app tabbed preview:
+      1. HTML Preview: Standalone sanitized HTML rendered inside a secure `<iframe>` (`sandbox="allow-same-origin"`).
+      2. JSON Artifact: Monospace formatted code block with syntax display and one-click "Copy JSON" action with clipboard feedback.
+    - Direct download actions for `.html` and `.json` artifacts invoking `downloadFile` with automatic blob URL revocation to prevent memory leaks.
+    - Direct browser download URL links matching API contract endpoints (`/api/v1/reports/{id}/export?format=html`).
+  - `frontend/src/App.tsx`:
+    - Mounted `InvestigationWorkspace` in the `investigation` tab with scenario routing and cross-tab navigation callbacks.
+  - `frontend/tests/`:
+    - `tests/api/investigations.test.ts`: 6 unit tests verifying list, get, create, update, delete, and synthesize API calls.
+    - `tests/api/reports.test.ts`: 4 unit tests verifying generate, export artifact text, get artifacts, and list artifacts.
+    - `tests/components/InvestigationWorkspace.test.tsx`: 6 component tests verifying empty state synthesis, 3-zone boundary separation, item additions/removals/toggles, workspace persistence, and ReportModal opening.
+    - `tests/components/ReportModal.test.tsx`: 5 component tests verifying report generation, HTML iframe preview, JSON artifact preview, Acceptance Criterion 1 (user can generate report and download both HTML and JSON), Acceptance Criterion 2 (HTML structure has full CSS styles, CSP headers, and valid HTML5), and error state handling.
+    - `tests/App.test.tsx`: Verified navigation tab switching to the Investigation workspace.
+- **Verification Evidence:**
+  - `cd frontend && npm test -- --run` (`vitest run`) -> 128 passed across 24 test files in 18.31s (100% pass rate).
+  - `cd frontend && npm run typecheck` (`tsc --noEmit`) -> 0 errors.
+  - `cd frontend && npm run lint` (`eslint .`) -> 0 warnings, 0 errors.
+  - `cd frontend && npm run build` (`tsc && vite build`) -> Built production bundle in 9.84s (HTML 1.01 kB, CSS 61.34 kB, JS 514.83 kB / gzip 145.14 kB).
+  - `cd backend && pytest` -> 235 passed across 19 test files in 16.75s (zero regressions).
+- **Remaining Limitations:** None. Investigation workspace, fact-hypothesis boundary separation, and incident report generation modal with HTML/JSON preview and downloads are fully operational and verified. Milestone **M6** is `COMPLETED`. Ready for `T21` (Recovery Verification Backend Engine).
+
 
 
 

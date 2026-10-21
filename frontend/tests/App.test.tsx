@@ -5,6 +5,8 @@ import * as scenariosApi from '../src/api/scenarios';
 import * as datasetsApi from '../src/api/datasets';
 import * as validationsApi from '../src/api/validations';
 import * as lineageApi from '../src/api/lineage';
+import * as pipelinesApi from '../src/api/pipelines';
+import * as investigationsApi from '../src/api/investigations';
 
 describe('Lux App Shell Component', () => {
   const mockScenarios = [
@@ -66,6 +68,9 @@ describe('Lux App Shell Component', () => {
       ],
       edges: [],
     });
+    vi.spyOn(pipelinesApi, 'listPipelineRuns').mockResolvedValue([]);
+    vi.spyOn(pipelinesApi, 'getPipelineFreshness').mockResolvedValue([]);
+    vi.spyOn(investigationsApi, 'listInvestigations').mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -156,6 +161,26 @@ describe('Lux App Shell Component', () => {
     expect(recoveryTab).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('heading', { level: 1, name: /recovery/i })).toBeInTheDocument();
     expect(screen.getByText(/before vs after verification/i)).toBeInTheDocument();
+
+    // Switch to Pipelines tab
+    const pipelinesTab = screen.getByRole('tab', { name: /pipelines/i });
+    await act(async () => {
+      fireEvent.click(pipelinesTab);
+    });
+
+    expect(pipelinesTab).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('heading', { level: 1, name: /pipelines/i })).toBeInTheDocument();
+    expect(await screen.findByTestId('pipeline-observability-view')).toBeInTheDocument();
+
+    // Switch to Investigation tab
+    const investigationTab = screen.getByRole('tab', { name: /investigation/i });
+    await act(async () => {
+      fireEvent.click(investigationTab);
+    });
+
+    expect(investigationTab).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('heading', { level: 1, name: /investigation/i })).toBeInTheDocument();
+    expect(await screen.findByTestId('investigation-workspace')).toBeInTheDocument();
   });
 
   it('loads and displays datasets with row counts and columns', async () => {

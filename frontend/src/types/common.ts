@@ -14,7 +14,7 @@ export interface ApiErrorResponse {
 }
 
 export type ComputeHealthStatus = 'SUCCESS' | 'FAILED' | 'PENDING' | 'RUNNING';
-export type QualityHealthStatus = 'HEALTHY' | 'DEGRADED' | 'CORRUPTED' | 'UNVALIDATED';
+export type QualityHealthStatus = 'HEALTHY' | 'WARNING' | 'DEGRADED' | 'CORRUPTED' | 'UNVALIDATED';
 
 export type NavigationTab =
   | 'validations'

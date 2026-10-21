@@ -3,5 +3,6 @@ export * from './scenarios';
 export * from './datasets';
 export * from './validations';
 export * from './lineage';
-export * from './lineage';
-
+export * from './pipelines';
+export * from './investigations';
+export * from './reports';
