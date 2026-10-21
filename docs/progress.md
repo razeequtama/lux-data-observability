@@ -12,9 +12,9 @@ This document is the single source of truth for implementation tracking across e
 | **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `COMPLETED` |
 | **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `COMPLETED` |
 | **M3** | Lineage DAG Domain Engine & Graph Integrity Validator | `T09`, `T10`, `T11` | `COMPLETED` |
-| **M4** | Pipeline Observability & Run History | `T12`, `T13` | `IN_PROGRESS` |
-| **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `NOT_STARTED` |
-| **M6** | Frontend "Trace the Failure" Interactive UI | `T16`, `T17`, `T18`, `T19`, `T20` | `NOT_STARTED` |
+| **M4** | Pipeline Observability & Run History | `T12`, `T13` | `COMPLETED` |
+| **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `COMPLETED` |
+| **M6** | Frontend "Trace the Failure" Interactive UI | `T16`, `T17`, `T18`, `T19`, `T20` | `IN_PROGRESS` |
 | **M7** | Recovery Verification & End-to-End Acceptance | `T21`, `T22`, `T23` | `NOT_STARTED` |
 | **M8** | Containerization & Operational Polish | `T24` | `NOT_STARTED` |
 
@@ -36,10 +36,10 @@ This document is the single source of truth for implementation tracking across e
 | `T10` | Downstream Impact Analysis Engine & Blast Radius Classifier | `T08`, `T09` | `COMPLETED` | `pytest tests/unit/test_impact_analysis.py` 13 passed; full `pytest` 155 passed; `ruff` & `mypy` 0 errors; orders.csv blast radius correctly classifies `dim_orders` as `DIRECTLY_AFFECTED` and `agg_daily_revenue`, `metric_revenue`, `report_exec_dash` as `POTENTIALLY_AFFECTED` |
 | `T11` | Lineage & Impact REST API Endpoints | `T09`, `T10` | `COMPLETED` | `pytest tests/integration/test_lineage_api.py` 16 passed; full `pytest` 171 passed; `ruff` & `mypy` 0 errors; `GET /api/v1/lineage` returns 16 nodes with valid Dagre `(x, y)`; `POST /api/v1/impact/trace` matches API contract |
 | `T12` | Pipeline Run History & Execution vs Quality Dual-Dimension Tracker | `T03`, `T08` | `COMPLETED` | `pytest tests/integration/test_pipeline_api.py` 8 passed; full `pytest` 187 passed; `ruff` & `mypy` 0 errors; overnight run verified with `COMPLETED_SUCCESS` compute vs `CORRUPTED` quality health; step logs & pagination verified |
-| `T13` | Dataset Partition Freshness & SLA Monitoring Service | `T05`, `T12` | `NOT_STARTED` | — |
-| `T14` | Investigation Workspace Engine & Schema Integration | `T03`, `T08`, `T10` | `NOT_STARTED` | — |
-| `T15` | Safe Report Generator Service (JSON & HTML with CSP) | `T14` | `NOT_STARTED` | — |
-| `T16` | Frontend Navigation Shell, Scenario Switcher & Dataset Inspector | `T02`, `T05` | `NOT_STARTED` | — |
+| `T13` | Dataset Partition Freshness & SLA Monitoring Service | `T05`, `T12` | `COMPLETED` | `pytest tests/integration/test_freshness_api.py` 5 passed; full `pytest` 199 passed; `ruff` & `mypy` 0 errors; `GET /api/v1/pipelines/freshness` identifies `orders.csv` as `STALE` (5.99h behind SLA); clean recovery and missing timestamp edge cases verified |
+| `T14` | Investigation Workspace Engine & Schema Integration | `T03`, `T08`, `T10` | `COMPLETED` | `pytest tests/integration/test_investigations_api.py` 9 passed; full `pytest` 218 passed; `ruff` & `mypy` 0 errors; verified facts, hypotheses, and action items persisted; fact-hypothesis boundary enforced; empty action items handled cleanly |
+| `T15` | Safe Report Generator Service (JSON & HTML with CSP) | `T14` | `COMPLETED` | `pytest tests/unit/test_report_sanitization.py tests/integration/test_reports_api.py` 17 passed; full `pytest` 235 passed; `ruff` & `mypy` 0 errors; XSS autoescape, CSP header, SHA-256 integrity, inlined Lux Purple CSS, native `<details>` evidence panels, and JSON/HTML export verified |
+| `T16` | Frontend Navigation Shell, Scenario Switcher & Dataset Inspector | `T02`, `T05` | `COMPLETED` | `vitest` 34 passed (6 test files); `tsc` & `eslint` 0 errors; production build verified (186.84 kB); scenario switcher, dataset inspector, paginated preview modal, and drag-and-drop upload with 20MB limit verified |
 | `T17` | Quality Validation Findings Explorer & Evidence Drawer UI | `T08`, `T16` | `NOT_STARTED` | — |
 | `T18` | Interactive Lineage DAG & Blast Radius Visualization UI | `T11`, `T16` | `NOT_STARTED` | — |
 | `T19` | Pipeline Observability, Freshness & Run History UI | `T12`, `T13`, `T16` | `NOT_STARTED` | — |
@@ -53,11 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), and **M3** (`T09`, `T10`, `T11`) are `COMPLETED`. Milestone **M4** is `IN_PROGRESS` (`T12` completed, `T13` pending).
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), and **M5** (`T14`, `T15`) are `COMPLETED`. Milestone **M6** is `IN_PROGRESS` with `T16` `COMPLETED`.
 - **Next Eligible Tasks:**
-  - `T13` (Dataset Partition Freshness & SLA Monitoring Service) — Prerequisites satisfied (`T05`, `T12`). Completes Milestone **M4**.
-  - `T14` (Investigation Workspace Engine & Schema Integration) — Prerequisites satisfied (`T03`, `T08`, `T10`). Initiates Milestone **M5**.
-  - `T16` (Frontend Navigation Shell, Scenario Switcher & Dataset Inspector) — Prerequisites satisfied (`T02`, `T05`). Initiates Milestone **M6**.
+  - `T17` (Quality Validation Findings Explorer & Evidence Drawer UI) — Prerequisites satisfied (`T08`, `T16`). Continues Milestone **M6** (Frontend "Trace the Failure" Interactive UI).
 
 ---
 
@@ -448,6 +446,143 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && ruff format --check .` -> 73 files already formatted.
   - `cd backend && mypy app` -> Success: no issues found in 54 source files.
 - **Remaining Limitations:** None. Dual-dimension pipeline run history is persisted and accessible via REST endpoints. Ready for partition freshness & SLA monitoring (`T13`).
+
+### `T13` — Dataset Partition Freshness & SLA Monitoring Service
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/schemas/pipeline.py`:
+    - `FreshnessStatus` enum (`FRESH`, `STALE`, `MISSING`).
+    - `FreshnessCheckResponse` Pydantic model (`dataset_id`, `dataset_name`, `sla_hours`, `expected_partition_timestamp`, `observed_partition_timestamp`, `status`, `hours_behind`, `id`, `scenario_id`, `checked_at`) matching the REST API contract.
+  - `backend/app/schemas/__init__.py`:
+    - Exported `FreshnessStatus` and `FreshnessCheckResponse`.
+  - `backend/app/services/pipeline/freshness.py`:
+    - `FreshnessService` engine providing:
+      - `calculate_hours_behind`: SLA window calculation preserving exact 2-decimal truncation (yielding 5.99h on Sunday orders 18:00:00 vs 23:59:59).
+      - `classify_freshness`: Partition recency classification across `FRESH` (within tolerance / on time), `STALE` (exceeding SLA), and `MISSING` (null/unparseable timestamps).
+      - `evaluate_dataset_records` & `evaluate_dataset_file`: In-memory and disk-based partition evaluation directly from CSV/JSON datasets.
+      - `get_freshness_status`: Query service fetching persisted `FreshnessCheck` entities with joined `Dataset` names, evaluated delay hours, and filtering by `scenario_id` and `dataset_id`.
+      - `seed_freshness_checks`: Idempotent seeding and updating of scenario freshness checkpoints into SQLite.
+  - `backend/app/services/pipeline/__init__.py`:
+    - Exported `FreshnessService`.
+  - `backend/app/services/ingestion/loader.py`:
+    - Delegated freshness checkpoint seeding to `FreshnessService.seed_freshness_checks`.
+  - `backend/app/api/v1/pipelines.py`:
+    - REST endpoint `GET /api/v1/pipelines/freshness` supporting scenario and dataset filters.
+  - `backend/tests/unit/test_freshness_service.py`:
+    - 7 unit tests covering delay calculation (5.99h), status transitions (`FRESH`, `STALE`, `MISSING`), CSV file evaluation, database seeding, dataset name joins, and null timestamp handling.
+  - `backend/tests/integration/test_freshness_api.py`:
+    - 5 integration tests asserting:
+      - `GET /api/v1/pipelines/freshness` identifies `orders.csv` as `STALE` (5.99 hours behind SLA) on defective `monday_revenue_mystery`.
+      - `inventory.csv` identified as `FRESH` (0.0 hours behind).
+      - Corrected recovery fixture yields `FRESH` with 0.0 hours behind for all datasets.
+      - Dataset filtering by `dataset_id=orders`.
+      - Safe handling of missing/null timestamps returning `MISSING` status.
+- **Verification Evidence:**
+  - `cd backend && pytest tests/unit/test_freshness_service.py tests/integration/test_freshness_api.py -v` -> 12 passed in 1.14s.
+  - `cd backend && pytest` -> 199 passed in 11.59s (100% test suite passing, 0 failures).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 76 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 55 source files.
+  - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 765ms (0 frontend regressions).
+- **Remaining Limitations:** None. Milestone **M4** is fully completed. The repository is ready for Milestone **M5** (`T14`: Investigation Workspace Engine & Schema Integration) and Milestone **M6** (`T16`: Frontend Navigation Shell, Scenario Switcher & Dataset Inspector).
+
+### `T15` — Safe Report Generator Service (JSON & HTML with CSP)
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/schemas/report.py`:
+    - Enums & Pydantic models: `ReportFormat` (`json`, `html`), `ReportGenerateRequest`, `ReportGenerateResponse`, `ReportArtifactResponse`, `ReportValidationSummary`, `ReportFindingDetail`, `ReportImpactedAsset`, `ReportPipelineSummary`, and `IncidentReportData`.
+    - Strict schemas ensuring reproducible evidence packages with full typing and validation.
+  - `backend/app/schemas/__init__.py`:
+    - Exported all report models and enums.
+  - `backend/app/services/reports/templates/incident_report.html`:
+    - Standalone HTML5 template with strict inlined Content Security Policy meta header (`default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox;`).
+    - Full inlined Lux Purple styling (`#6B46C1` brand primary, `#7C3AED` hover, dark slate backgrounds, high-contrast accessible typography).
+    - HTML5 native collapsible `<details class="evidence-panel">` and `<summary>` elements allowing interactive sample keys, line numbers, and sample row inspection with zero client-side JavaScript.
+    - Zero external network dependencies, CDNs, or scripts.
+  - `backend/app/services/reports/generator.py`:
+    - `ReportGeneratorService`:
+      - Secure Jinja2 environment configured with `select_autoescape(enabled_extensions=('html', 'xml', 'jinja2'), default_for_string=True, default=True)`.
+      - Automatic evidence extraction (`_extract_evidence_samples`) mapping duplicate keys, orphaned foreign keys, line numbers, and sample records.
+      - Full data package synthesis connecting Scenario, Investigation, ValidationRun, ValidationFindings, Downstream Blast Radius (via `ImpactAnalysisService`), and Pipeline execution logs.
+      - SHA-256 cryptographic integrity hash calculation for all exported artifacts.
+      - Artifact file writing to `settings.artifacts_dir` (`data/artifacts/{report_id}.json` and `data/artifacts/{report_id}.html`) and persistence in SQLite `report_artifacts` table.
+      - `get_report_artifact`: Retrieval with path traversal protection guaranteeing paths remain within `settings.artifacts_dir`.
+      - `list_artifacts`: Filtering and pagination support.
+  - `backend/app/services/reports/__init__.py`:
+    - Exported `ReportGeneratorService`.
+  - `backend/app/api/v1/reports.py`:
+    - REST endpoints:
+      - `POST /api/v1/reports/generate`: 201 Created report generation endpoint returning download URLs.
+      - `GET /api/v1/reports/{id}/export?format=json|html`: 200 OK export streaming endpoint with HTTP CSP headers (`Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox;`).
+      - `GET /api/v1/reports/{id}`: 200 OK inspection endpoint returning both artifact metadata records.
+      - `GET /api/v1/reports`: 200 OK query endpoint with scenario and investigation filters.
+  - `backend/app/api/v1/router.py`:
+    - Registered `reports_router` under prefix `/reports`.
+  - `backend/tests/unit/test_report_sanitization.py`:
+    - 5 unit tests covering XSS prevention via Jinja2 autoescape (`<script>` and `<img>` tags sanitized to HTML entities), CSP meta header validation, native collapsible details tags, SHA-256 cryptographic calculation, and Unicode/UTF-8 character handling.
+  - `backend/tests/integration/test_reports_api.py`:
+    - 12 integration tests asserting:
+      - `POST /api/v1/reports/generate` generates physical JSON and HTML files and returns 201 Created.
+      - `GET /api/v1/reports/{id}/export?format=json` returns structured incident report matching `IncidentReportData` schema.
+      - `GET /api/v1/reports/{id}/export?format=html` streams standalone HTML with CSP response headers and inlined styles.
+      - Automated evidence synthesis when facts/hypotheses are omitted.
+      - Artifact listing and lookup by report ID prefix and scenario.
+      - 400 Bad Request on invalid export format.
+      - 404 Not Found on nonexistent scenario, validation run, or report artifact.
+      - Path traversal attempt rejection (`PATH_TRAVERSAL_DETECTED`).
+- **Verification Evidence:**
+  - `cd backend && pytest tests/unit/test_report_sanitization.py tests/integration/test_reports_api.py -v` -> 17 passed in 4.08s.
+  - `cd backend && pytest` -> 235 passed in 18.67s (100% test suite passing, 0 failures).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 86 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 61 source files.
+- **Remaining Limitations:** None. Milestone **M5** (Incident Investigation & Safe Report Generation) is now fully completed. The repository is ready for Milestone **M6** (`T16`: Frontend Navigation Shell, Scenario Switcher & Dataset Inspector).
+
+### `T16` — Frontend Navigation Shell, Scenario Switcher & Dataset Inspector
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `frontend/src/types/`:
+    - `scenario.ts`: `ScenarioSummary`, `ScenarioDetail`, `LoadScenarioRequest`, `LoadScenarioResponse`, `FixtureVersion`.
+    - `dataset.ts`: `ColumnSchema`, `DatasetResponse`, `DatasetPreviewResponse`, `DatasetUploadResponse`.
+    - `common.ts`: `ApiErrorDetail`, `ApiErrorResponse`, `ComputeHealthStatus`, `QualityHealthStatus`, `NavigationTab`.
+    - `index.ts`: Re-export domain types.
+  - `frontend/src/constants/navigation.ts`:
+    - Navigation tab definitions (`Validations`, `Lineage`, `Impact Analysis`, `Pipelines`, `Investigation`, `Recovery`) separated for fast-refresh compliance.
+  - `frontend/src/api/`:
+    - `client.ts`: Robust typed Fetch wrapper, `ApiClientError` with parsed Lux error envelopes (`error.code`, `error.message`, `error.details`), environment-aware URL resolution (`new URL(path, window.location.origin)`).
+    - `scenarios.ts`: `listScenarios`, `getScenario`, and `loadScenario`.
+    - `datasets.ts`: `listDatasets`, `getDataset`, `previewDataset`, and `uploadDataset` (multipart FormData).
+    - `index.ts`: Unified API exports.
+  - `frontend/src/components/common/`:
+    - `AlertBanner.tsx`: Accessible dismissible banner (`role="alert"`) with error, warning, success, and info styles.
+    - `Modal.tsx`: Accessible dialog wrapper (`role="dialog"`, `aria-modal="true"`) with backdrop dismiss, Escape key listener, and close button.
+    - `AppHeader.tsx`: Lux branding (`data-testid="lux-logo"`), active scenario badge (`data-testid="active-scenario"`), ADR-006 dual-dimension health indicator (`data-testid="dual-health-indicator"` separating Compute SUCCESS and Quality CORRUPTED/HEALTHY), datasets drawer toggle, and file upload trigger.
+  - `frontend/src/components/scenario/`:
+    - `ScenarioSwitcher.tsx`: Scenario selector dropdown, fixture version toggle (`defective` / `corrected`), and "Load Scenario" button with loading spinner state.
+  - `frontend/src/components/dataset/`:
+    - `DatasetInspector.tsx`: Ingested dataset table displaying filename, format badge (CSV/JSON), formatted row count (e.g. `1,250`), column count, formatted file size (e.g. `102.4 KB`), and per-dataset "Preview" button.
+    - `DatasetPreviewModal.tsx`: Paginated dataset row preview modal (`previewDataset`), sticky column header, row index column, previous/next pagination buttons, page indicator, and error state.
+    - `UploadModal.tsx`: Drag-and-drop file uploader with client-side format validation (only `.csv` or `.json`), size validation (max 20MB limit enforced), custom dataset display name input, target workspace indicator, and error feedback.
+  - `frontend/src/App.tsx`:
+    - Central shell orchestration coordinating active tab, scenario switching, fixture reloading, dataset inspection, previewing, and custom dataset ingestion.
+  - `frontend/tests/`:
+    - `api/client.test.ts`: 5 tests asserting GET/POST/upload execution, standard error envelope parsing, and network failure handling.
+    - `components/ScenarioSwitcher.test.tsx`: 5 tests asserting scenario selection, fixture toggling, loading state, and load trigger.
+    - `components/DatasetInspector.test.tsx`: 5 tests asserting row count / column count rendering, preview trigger, upload trigger, loading and empty states.
+    - `components/DatasetPreviewModal.test.tsx`: 4 tests asserting table columns, pagination next/prev, close trigger, and error handling.
+    - `components/UploadModal.test.tsx`: 5 tests asserting dropzone rendering, non-CSV/JSON format rejection, >20MB limit rejection, valid upload submission, and API failure alert.
+    - `App.test.tsx`: 10 integration tests asserting header branding, active scenario badge, dual-health indicator, tab switching, dataset table row counts, scenario loading trigger, dataset inspector toggle, and upload modal opening.
+- **Verification Evidence:**
+  - `cd frontend && npm run typecheck` (`tsc --noEmit`) -> 0 errors.
+  - `cd frontend && npm run lint` (`eslint .`) -> 0 warnings, 0 errors.
+  - `cd frontend && npm test` (`vitest run`) -> 34 passed across 6 test files in 7.81s.
+  - `cd frontend && npm run build` (`tsc && vite build`) -> Built production assets in `frontend/dist/` in 7.56s (HTML 1.01 kB, CSS 22.94 kB, JS 186.84 kB).
+  - `cd backend && pytest` -> 235 passed in 17.99s (no regressions).
+- **Remaining Limitations:** None. Frontend foundation, navigation, scenario switcher, and dataset inspector are fully operational. Ready for `T17` (Quality Validation Findings Explorer & Evidence Drawer UI).
+
+
+
+
 
 
 

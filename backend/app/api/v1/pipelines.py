@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.pipeline import PipelineRunResponse
+from app.schemas.pipeline import FreshnessCheckResponse, PipelineRunResponse
+from app.services.pipeline.freshness import FreshnessService
 from app.services.pipeline.service import PipelineHistoryService
 
 router = APIRouter(prefix="/pipelines", tags=["Pipelines"])
@@ -58,3 +59,28 @@ def get_pipeline_run(
     """Retrieve a single pipeline run by its unique identifier."""
     run = PipelineHistoryService.get_run_by_id(db=db, run_id=run_id)
     return PipelineRunResponse.from_model(run, include_logs=True)
+
+
+@router.get(
+    "/freshness",
+    response_model=list[FreshnessCheckResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get Data Freshness Status",
+    description=(
+        "Retrieve dataset partition freshness checkpoints comparing expected SLA "
+        "timestamps against observed partition timestamps."
+    ),
+)
+def get_pipeline_freshness(
+    scenario_id: str | None = Query(
+        default=None, description="Filter freshness checks by scenario ID"
+    ),
+    dataset_id: str | None = Query(default=None, description="Optional filter by dataset ID"),
+    db: Session = Depends(get_db),
+) -> list[FreshnessCheckResponse]:
+    """Retrieve dataset partition freshness and SLA compliance status."""
+    return FreshnessService.get_freshness_status(
+        db=db,
+        scenario_id=scenario_id,
+        dataset_id=dataset_id,
+    )

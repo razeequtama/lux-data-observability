@@ -22,6 +22,7 @@ from app.schemas.scenario import (
     ScenarioSummary,
 )
 from app.services.ingestion.reader import DatasetReader
+from app.services.pipeline.freshness import FreshnessService
 from app.services.pipeline.service import PipelineHistoryService
 
 
@@ -368,27 +369,12 @@ class ScenarioLoaderService:
             runs_data=pipeline_meta.get("pipeline_runs", []),
         )
 
-        for check_def in pipeline_meta.get("freshness_checks", []):
-            check_id = check_def["id"]
-            dataset_id = check_def["dataset_id"]
-            if dataset_id not in loaded_datasets:
-                continue
-
-            exp_dt = _parse_iso_datetime(check_def.get("expected_partition_timestamp")) or now
-            obs_dt = _parse_iso_datetime(check_def.get("observed_partition_timestamp")) or now
-            chk_dt = _parse_iso_datetime(check_def.get("checked_at")) or now
-
-            fresh_check = FreshnessCheck(
-                id=check_id,
-                scenario_id=scenario_id,
-                dataset_id=dataset_id,
-                expected_partition_timestamp=exp_dt,
-                observed_partition_timestamp=obs_dt,
-                sla_hours=check_def.get("sla_hours", 24),
-                status=check_def.get("status", "FRESH"),
-                checked_at=chk_dt,
-            )
-            db.add(fresh_check)
+        FreshnessService.seed_freshness_checks(
+            db=db,
+            scenario_id=scenario_id,
+            checks_data=pipeline_meta.get("freshness_checks", []),
+            loaded_datasets=loaded_datasets,
+        )
 
         db.commit()
 

@@ -33,6 +33,14 @@ class QualityHealthStatus(StrEnum):
     UNVALIDATED = "UNVALIDATED"
 
 
+class FreshnessStatus(StrEnum):
+    """Partition freshness SLA status classification."""
+
+    FRESH = "FRESH"
+    STALE = "STALE"
+    MISSING = "MISSING"
+
+
 class PipelineStepLog(BaseModel):
     """Execution step log details within a pipeline run."""
 
@@ -133,3 +141,29 @@ class PipelineRunResponse(BaseModel):
             created_at=getattr(model, "created_at", None),
         )
 
+
+class FreshnessCheckResponse(BaseModel):
+    """Dataset partition freshness checkpoint response matching the REST API contract."""
+
+    dataset_id: str = Field(..., description="Target dataset identifier")
+    dataset_name: str = Field(..., description="Target dataset display name")
+    sla_hours: int = Field(..., description="Configured SLA window in hours")
+    expected_partition_timestamp: datetime = Field(
+        ..., description="Expected partition cutoff timestamp"
+    )
+    observed_partition_timestamp: datetime | None = Field(
+        default=None, description="Max observed partition timestamp in dataset"
+    )
+    status: FreshnessStatus = Field(
+        ..., description="Freshness evaluation status (FRESH, STALE, MISSING)"
+    )
+    hours_behind: float = Field(
+        default=0.0, description="Hours partition timestamp is behind SLA expectation"
+    )
+    id: str | None = Field(default=None, description="Freshness check unique identifier")
+    scenario_id: str | None = Field(default=None, description="Associated scenario identifier")
+    checked_at: datetime | None = Field(
+        default=None, description="Timestamp when freshness check was performed"
+    )
+
+    model_config = ConfigDict(from_attributes=True)

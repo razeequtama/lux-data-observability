@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox;">
+  <title>{{ title }} — Lux Incident Report</title>
+  <style>
+    :root {
+      --primary: #6B46C1;
+      --primary-hover: #7C3AED;
+      --primary-light: #EDE9FE;
+      --bg-dark: #0F172A;
+      --bg-card: #1E293B;
+      --border-dark: #334155;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --bg-page: #F8FAFC;
+      --bg-surface: #FFFFFF;
+      --border-light: #E2E8F0;
+      --status-emerald: #10B981;
+      --status-emerald-bg: #ECFDF5;
+      --status-amber: #F59E0B;
+      --status-amber-bg: #FEF3C7;
+      --status-rose: #F43F5E;
+      --status-rose-bg: #FFF1F2;
+      --status-slate: #64748B;
+      --status-slate-bg: #F1F5F9;
+      --status-purple: #6B46C1;
+      --status-purple-bg: #F5F3FF;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 1140px;
+      margin: 0 auto;
+    }
+
+    /* Header Banner */
+    .header-banner {
+      background: linear-gradient(135deg, #4C1D95 0%, #6B46C1 50%, #7C3AED 100%);
+      color: #FFFFFF;
+      border-radius: 12px;
+      padding: 32px 36px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(107, 70, 193, 0.2);
+    }
+
+    .brand-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #DDD6FE;
+      margin-bottom: 8px;
+    }
+
+    .brand-eyebrow .dot {
+      width: 8px;
+      height: 8px;
+      background-color: #A78BFA;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .header-title {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      color: #FFFFFF;
+    }
+
+    .header-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 13px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meta-label {
+      color: #C4B5FD;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .meta-value {
+      font-weight: 600;
+      color: #FFFFFF;
+    }
+
+    .meta-value code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Cards & Panels */
+    .card {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--bg-dark);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Summary Stat Cards */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background-color: var(--bg-page);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--bg-dark);
+    }
+
+    .stat-value.danger { color: var(--status-rose); }
+    .stat-value.success { color: var(--status-emerald); }
+    .stat-value.warning { color: var(--status-amber); }
+
+    /* Investigation Details */
+    .investigation-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 800px) {
+      .investigation-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .investigation-box {
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 18px;
+      background: var(--bg-page);
+    }
+
+    .box-header {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .box-header.facts { color: #1E3A8A; }
+    .box-header.hypotheses { color: #78350F; }
+    .box-header.actions { color: #14532D; }
+
+    .item-list {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .item-list li {
+      font-size: 13px;
+      line-height: 1.45;
+      padding-left: 18px;
+      position: relative;
+      color: var(--text-main);
+    }
+
+    .item-list li::before {
+      content: "•";
+      position: absolute;
+      left: 4px;
+      font-weight: bold;
+    }
+
+    .item-list.facts li::before { color: #2563EB; }
+    .item-list.hypotheses li::before { color: #D97706; }
+    .item-list.actions li::before { content: "✓"; color: #059669; }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-rose { background-color: var(--status-rose-bg); color: var(--status-rose); border: 1px solid #FECDD3; }
+    .badge-emerald { background-color: var(--status-emerald-bg); color: var(--status-emerald); border: 1px solid #A7F3D0; }
+    .badge-amber { background-color: var(--status-amber-bg); color: var(--status-amber); border: 1px solid #FDE68A; }
+    .badge-slate { background-color: var(--status-slate-bg); color: var(--status-slate); border: 1px solid #CBD5E1; }
+    .badge-purple { background-color: var(--status-purple-bg); color: var(--status-purple); border: 1px solid #DDD6FE; }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--bg-page);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border-light);
+    }
+
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-light);
+      vertical-align: top;
+    }
+
+    tr:hover td {
+      background-color: #F8FAFC;
+    }
+
+    /* Collapsible Evidence Native HTML Details */
+    details.evidence-panel {
+      margin-top: 10px;
+      background-color: #F8FAFC;
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    details.evidence-panel summary {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      cursor: pointer;
+      user-select: none;
+      background-color: #F1F5F9;
+      outline: none;
+    }
+
+    details.evidence-panel summary:hover {
+      background-color: #E2E8F0;
+    }
+
+    .evidence-body {
+      padding: 12px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: #334155;
+    }
+
+    .key-tag {
+      display: inline-block;
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin: 2px;
+      font-size: 11px;
+    }
+
+    pre.code-block {
+      background-color: #0F172A;
+      color: #F8FAFC;
+      padding: 10px 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 11px;
+      line-height: 1.4;
+      margin-top: 6px;
+    }
+
+    /* Breadcrumbs / Paths */
+    .path-breadcrumbs {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .path-segment {
+      background: #EDE9FE;
+      color: #5B21B6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .path-arrow {
+      color: var(--text-muted);
+      font-weight: bold;
+    }
+
+    /* Integrity Footer */
+    .footer-integrity {
+      background-color: #FFFFFF;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 18px 24px;
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .integrity-hash {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background-color: var(--bg-page);
+      border: 1px solid var(--border-light);
+      padding: 6px 12px;
+      border-radius: 4px;
+      word-break: break-all;
+      color: var(--bg-dark);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header Banner -->
+    <header class="header-banner">
+      <div class="brand-eyebrow">
+        <span class="dot"></span>
+        <span>Lux Data Observability &bull; Safe Incident Report</span>
+      </div>
+      <h1 class="header-title">{{ title }}</h1>
+      <p style="color: #E9D5FF; font-size: 14px;">Deterministic, evidence-based investigation report generated without AI speculation.</p>
+
+      <div class="header-meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Report ID</span>
+          <span class="meta-value"><code>{{ report_id }}</code></span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Investigation ID</span>
+          <span class="meta-value"><code>{{ investigation_id }}</code></span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Scenario</span>
+          <span class="meta-value">{{ scenario.name }} (<code>{{ scenario.id }}</code>)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Generated Timestamp</span>
+          <span class="meta-value">{{ generated_at }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Executive Summary / Investigation Details -->
+    <section class="card">
+      <h2 class="card-title">1. Investigation Synthesis</h2>
+      <div class="investigation-grid">
+        <!-- Verified Facts -->
+        <div class="investigation-box">
+          <h3 class="box-header facts">
+            <span>Verified Facts (Observed Evidence)</span>
+          </h3>
+          {% if investigation.verified_facts %}
+          <ul class="item-list facts">
+            {% for fact in investigation.verified_facts %}
+            <li>{{ fact }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p style="color: var(--text-muted); font-size: 13px;">No verified facts recorded.</p>
+          {% endif %}
+        </div>
+
+        <!-- Hypotheses -->
+        <div class="investigation-box">
+          <h3 class="box-header hypotheses">
+            <span>Working Hypotheses (Theories)</span>
+          </h3>
+          {% if investigation.hypotheses %}
+          <ul class="item-list hypotheses">
+            {% for hypothesis in investigation.hypotheses %}
+            <li>{{ hypothesis }}</li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p style="color: var(--text-muted); font-size: 13px;">No working hypotheses recorded.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Remediation Actions -->
+      {% if investigation.action_items %}
+      <div class="investigation-box" style="margin-top: 16px;">
+        <h3 class="box-header actions">
+          <span>Remediation Action Items</span>
+        </h3>
+        <ul class="item-list actions">
+          {% for action in investigation.action_items %}
+          <li>{{ action }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Data Quality Validation Run Summary -->
+    <section class="card">
+      <h2 class="card-title">2. Quality Validation Execution</h2>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Rules Checked</div>
+          <div class="stat-value">{{ validation_summary.total_rules }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Passed Checks</div>
+          <div class="stat-value success">{{ validation_summary.passed_count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Failed Checks</div>
+          <div class="stat-value danger">{{ validation_summary.failed_count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Warnings</div>
+          <div class="stat-value warning">{{ validation_summary.warning_count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Quality Health</div>
+          <div class="stat-value">
+            {% if validation_summary.quality_health == "HEALTHY" %}
+            <span class="badge badge-emerald">HEALTHY</span>
+            {% elif validation_summary.quality_health == "CORRUPTED" %}
+            <span class="badge badge-rose">CORRUPTED</span>
+            {% elif validation_summary.quality_health == "DEGRADED" %}
+            <span class="badge badge-rose">DEGRADED</span>
+            {% else %}
+            <span class="badge badge-amber">{{ validation_summary.quality_health }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size: 12px; color: var(--text-muted);">
+        Execution Run ID: <code>{{ validation_summary.run_id }}</code> &bull; Executed at: {{ validation_summary.executed_at }}
+        {% if validation_summary.duration_ms %} &bull; Duration: {{ validation_summary.duration_ms }}ms{% endif %}
+      </p>
+    </section>
+
+    <!-- Observed Findings & Granular Row Evidence -->
+    <section class="card">
+      <h2 class="card-title">3. Observed Quality Findings & Evidence</h2>
+      {% if findings %}
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Severity</th>
+              <th>Rule ID & Name</th>
+              <th>Dataset</th>
+              <th>Finding Message</th>
+              <th>Violated Records</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for finding in findings %}
+            <tr>
+              <td>
+                {% if finding.status == "FAILED" %}
+                <span class="badge badge-rose">FAILED</span>
+                {% elif finding.status == "PASSED" %}
+                <span class="badge badge-emerald">PASSED</span>
+                {% else %}
+                <span class="badge badge-amber">{{ finding.status }}</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if finding.severity == "CRITICAL" %}
+                <span class="badge badge-rose">CRITICAL</span>
+                {% elif finding.severity == "HIGH" %}
+                <span class="badge badge-amber">HIGH</span>
+                {% else %}
+                <span class="badge badge-slate">{{ finding.severity }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <strong><code>{{ finding.rule_id }}</code></strong><br>
+                <span style="color: var(--text-muted); font-size: 11px;">{{ finding.rule_name }}</span>
+              </td>
+              <td><code>{{ finding.dataset_id }}</code></td>
+              <td>
+                <div>{{ finding.message }}</div>
+                {% if finding.sample_keys or finding.sample_line_numbers or finding.sample_records %}
+                <details class="evidence-panel">
+                  <summary>View Row Evidence ({{ finding.sample_keys|length }} keys / {{ finding.sample_records|length }} records)</summary>
+                  <div class="evidence-body">
+                    {% if finding.sample_keys %}
+                    <div style="margin-bottom: 8px;">
+                      <strong>Sample Offending Keys:</strong><br>
+                      {% for key in finding.sample_keys %}
+                      <span class="key-tag">{{ key }}</span>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if finding.sample_line_numbers %}
+                    <div style="margin-bottom: 8px;">
+                      <strong>Observed Line Numbers:</strong> {{ finding.sample_line_numbers|join(", ") }}
+                    </div>
+                    {% endif %}
+
+                    {% if finding.sample_records %}
+                    <div>
+                      <strong>Sample Offending Records:</strong>
+                      {% for rec in finding.sample_records %}
+                      <pre class="code-block">{{ rec }}</pre>
+                      {% endfor %}
+                    </div>
+                    {% endif %}
+                  </div>
+                </details>
+                {% endif %}
+              </td>
+              <td style="white-space: nowrap;">
+                <strong>{{ finding.affected_record_count }}</strong>
+                <span style="color: var(--text-muted);">/ {{ finding.total_record_count }}</span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p style="color: var(--text-muted); font-size: 13px;">No findings reported for this run.</p>
+      {% endif %}
+    </section>
+
+    <!-- Downstream Blast Radius -->
+    {% if impacted_assets %}
+    <section class="card">
+      <h2 class="card-title">4. Downstream Impact & Blast Radius</h2>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+        Lineage graph traversal tracing downstream reachable assets from identified source failures.
+      </p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Asset Node</th>
+              <th>Type</th>
+              <th>Impact Status</th>
+              <th>Dependency Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for asset in impacted_assets %}
+            <tr>
+              <td>
+                <strong>{{ asset.node_name }}</strong><br>
+                <code style="color: var(--text-muted); font-size: 11px;">{{ asset.node_id }}</code>
+              </td>
+              <td><span class="badge badge-purple">{{ asset.node_type }}</span></td>
+              <td>
+                {% if asset.impact_status == "CONFIRMED_FAILED" %}
+                <span class="badge badge-rose">CONFIRMED FAILED</span>
+                {% elif asset.impact_status == "DIRECTLY_AFFECTED" %}
+                <span class="badge badge-rose">DIRECTLY AFFECTED</span>
+                {% elif asset.impact_status == "POTENTIALLY_AFFECTED" %}
+                <span class="badge badge-amber">POTENTIALLY AFFECTED</span>
+                {% else %}
+                <span class="badge badge-emerald">HEALTHY</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if asset.path %}
+                <div class="path-breadcrumbs">
+                  {% for step in asset.path %}
+                  <span class="path-segment">{{ step }}</span>
+                  {% if not loop.last %}
+                  <span class="path-arrow">&rarr;</span>
+                  {% endif %}
+                  {% endfor %}
+                </div>
+                {% else %}
+                <span style="color: var(--text-muted); font-size: 11px;">Root target</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- Pipeline History Context -->
+    {% if pipeline_summary %}
+    <section class="card">
+      <h2 class="card-title">5. Pipeline Execution Context</h2>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Pipeline Name</div>
+          <div class="stat-value" style="font-size: 16px;">{{ pipeline_summary.pipeline_name }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Compute Execution</div>
+          <div class="stat-value">
+            {% if pipeline_summary.execution_status == "COMPLETED_SUCCESS" %}
+            <span class="badge badge-emerald">{{ pipeline_summary.execution_status }}</span>
+            {% else %}
+            <span class="badge badge-rose">{{ pipeline_summary.execution_status }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Quality Health</div>
+          <div class="stat-value">
+            {% if pipeline_summary.quality_health == "CORRUPTED" %}
+            <span class="badge badge-rose">{{ pipeline_summary.quality_health }}</span>
+            {% else %}
+            <span class="badge badge-emerald">{{ pipeline_summary.quality_health }}</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Records Ingested</div>
+          <div class="stat-value">{{ pipeline_summary.records_ingested }}</div>
+        </div>
+      </div>
+      <p style="font-size: 12px; color: var(--text-muted);">
+        Execution window: {{ pipeline_summary.start_time }} &bull; Duration: {{ pipeline_summary.duration_ms }}ms
+      </p>
+    </section>
+    {% endif %}
+
+    <!-- Integrity & CSP Footer -->
+    <footer class="footer-integrity">
+      <div>
+        <strong>Cryptographic Integrity & Anti-Tamper Verification</strong>
+      </div>
+      <div>
+        SHA-256 Hash of Artifact:
+        <div class="integrity-hash">{{ integrity.sha256 }}</div>
+      </div>
+      <div style="font-size: 11px;">
+        Exported by Lux Data Observability Platform. Enforces strict Content Security Policy (<code>default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox;</code>). Standalone document with zero external network calls or untrusted code execution.
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
+

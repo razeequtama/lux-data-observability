@@ -1,187 +1,167 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { AppHeader } from './components/common/AppHeader';
+import { NAVIGATION_TABS } from './constants/navigation';
+import { AlertBanner, AlertType } from './components/common/AlertBanner';
+import { DatasetInspector } from './components/dataset/DatasetInspector';
+import { DatasetPreviewModal } from './components/dataset/DatasetPreviewModal';
+import { UploadModal } from './components/dataset/UploadModal';
 import {
-  Layers,
-  ShieldCheck,
-  CheckCircle2,
-  AlertTriangle,
-  GitFork,
-  Target,
-  Clock,
-  FileText,
-  RefreshCw,
-  Database,
-  ExternalLink,
-} from 'lucide-react';
-
-type NavigationTab =
-  | 'validations'
-  | 'lineage'
-  | 'impact'
-  | 'pipelines'
-  | 'investigation'
-  | 'recovery';
-
-interface TabDefinition {
-  id: NavigationTab;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
-}
-
-const TABS: TabDefinition[] = [
-  {
-    id: 'validations',
-    label: 'Validations',
-    icon: ShieldCheck,
-    description: 'Deterministic quality rule evaluation and findings inspector',
-  },
-  {
-    id: 'lineage',
-    label: 'Lineage',
-    icon: GitFork,
-    description: 'Interactive Directed Acyclic Graph (DAG) dependency visualization',
-  },
-  {
-    id: 'impact',
-    label: 'Impact Analysis',
-    icon: Target,
-    description: 'Downstream blast radius calculation and affected consumer tracing',
-  },
-  {
-    id: 'pipelines',
-    label: 'Pipelines',
-    icon: Clock,
-    description: 'Pipeline execution logs, run history, and partition freshness monitoring',
-  },
-  {
-    id: 'investigation',
-    label: 'Investigation',
-    icon: FileText,
-    description: 'Unified incident workspace and reproducible HTML/JSON report generation',
-  },
-  {
-    id: 'recovery',
-    label: 'Recovery',
-    icon: RefreshCw,
-    description: 'Before vs after verification and resolution evidence comparison',
-  },
-];
+  listScenarios,
+  loadScenario,
+  listDatasets,
+} from './api';
+import {
+  DatasetResponse,
+  DatasetUploadResponse,
+  FixtureVersion,
+  NavigationTab,
+  ScenarioSummary,
+} from './types';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<NavigationTab>('validations');
-  const activeTabDef = TABS.find((tab) => tab.id === activeTab) || TABS[0];
+  const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
+  const [activeScenarioId, setActiveScenarioId] = useState<string>('monday_revenue_mystery');
+  const [activeFixtureVersion, setActiveFixtureVersion] = useState<FixtureVersion>('defective');
+  const [datasets, setDatasets] = useState<DatasetResponse[]>([]);
+
+  // UI state
+  const [isDatasetInspectorOpen, setIsDatasetInspectorOpen] = useState(true);
+  const [previewingDataset, setPreviewingDataset] = useState<DatasetResponse | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isLoadingScenario, setIsLoadingScenario] = useState(false);
+  const [isLoadingDatasets, setIsLoadingDatasets] = useState(false);
+  const [alert, setAlert] = useState<{
+    type: AlertType;
+    message: string;
+    details?: string;
+  } | null>(null);
+
+  const activeTabDef = NAVIGATION_TABS.find((tab) => tab.id === activeTab) || NAVIGATION_TABS[0];
+
+  const fetchDatasets = useCallback(async (scenarioId: string) => {
+    setIsLoadingDatasets(true);
+    try {
+      const data = await listDatasets(scenarioId);
+      setDatasets(data);
+    } catch (err) {
+      // Don't overwrite critical scenario alerts, but log failure
+      console.warn('Could not fetch datasets:', err);
+    } finally {
+      setIsLoadingDatasets(false);
+    }
+  }, []);
+
+  const fetchScenarios = useCallback(async () => {
+    try {
+      const list = await listScenarios();
+      if (list && list.length > 0) {
+        setScenarios(list);
+        const current = list.find((s) => s.id === activeScenarioId) || list[0];
+        setActiveScenarioId(current.id);
+        if (current.active_fixture_version === 'corrected') {
+          setActiveFixtureVersion('corrected');
+        }
+      }
+    } catch (err) {
+      console.warn('Could not list scenarios:', err);
+    }
+  }, [activeScenarioId]);
+
+  useEffect(() => {
+    fetchScenarios();
+    fetchDatasets(activeScenarioId);
+  }, [fetchScenarios, fetchDatasets, activeScenarioId]);
+
+  const handleSelectScenario = (id: string) => {
+    setActiveScenarioId(id);
+    fetchDatasets(id);
+  };
+
+  const handleSelectFixtureVersion = (version: FixtureVersion) => {
+    setActiveFixtureVersion(version);
+  };
+
+  const handleLoadScenario = async (scenarioId: string, version: FixtureVersion) => {
+    setIsLoadingScenario(true);
+    setAlert(null);
+    try {
+      const res = await loadScenario(scenarioId, version);
+      setActiveFixtureVersion(version);
+      setAlert({
+        type: 'success',
+        message: 'Scenario Loaded Successfully',
+        details: `${res.message} Loaded ${res.loaded_datasets.length} datasets, ${res.rules_registered} rules, and ${res.lineage_nodes_loaded} lineage nodes.`,
+      });
+      await fetchDatasets(scenarioId);
+      await fetchScenarios();
+    } catch (err) {
+      setAlert({
+        type: 'error',
+        message: 'Failed to Load Scenario',
+        details: err instanceof Error ? err.message : 'Unknown network error loading scenario.',
+      });
+    } finally {
+      setIsLoadingScenario(false);
+    }
+  };
+
+  const handleUploadSuccess = async (uploaded: DatasetUploadResponse) => {
+    setAlert({
+      type: 'success',
+      message: 'Dataset Ingested Successfully',
+      details: `File "${uploaded.name}" (${uploaded.record_count.toLocaleString()} rows, ${uploaded.column_count} columns) ingested into workspace.`,
+    });
+    await fetchDatasets(activeScenarioId);
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-lux-700 selection:text-white">
-      {/* Top Header / App Shell */}
-      <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo and Brand */}
-            <div className="flex items-center space-x-3">
-              <div
-                className="w-10 h-10 rounded-lg bg-lux-700 flex items-center justify-center shadow-lg shadow-lux-700/20 text-white"
-                data-testid="lux-logo"
-                aria-label="Lux Data Observability Logo"
-              >
-                <Layers className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-bold text-lg text-white tracking-tight">Lux</span>
-                  <span className="text-xs px-2 py-0.5 rounded font-mono font-medium bg-lux-900/80 text-lux-200 border border-lux-700/50">
-                    v0.1.0
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400">Data Observability Platform</p>
-              </div>
-            </div>
+      {/* Top Navigation Shell */}
+      <AppHeader
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        scenarios={scenarios}
+        activeScenarioId={activeScenarioId}
+        activeFixtureVersion={activeFixtureVersion}
+        isLoadingScenario={isLoadingScenario}
+        onSelectScenario={handleSelectScenario}
+        onSelectFixtureVersion={handleSelectFixtureVersion}
+        onLoadScenario={handleLoadScenario}
+        onOpenUpload={() => setIsUploadModalOpen(true)}
+        datasetsCount={datasets.length}
+        isDatasetInspectorOpen={isDatasetInspectorOpen}
+        onToggleDatasetInspector={() => setIsDatasetInspectorOpen((prev) => !prev)}
+      />
 
-            {/* Scenario Badge & Dual-Health Dimension Indicator */}
-            <div className="flex items-center space-x-4">
-              {/* Active Scenario Selector / Indicator */}
-              <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-md bg-slate-800/80 border border-slate-700 text-xs">
-                <Database className="w-3.5 h-3.5 text-lux-400" />
-                <span className="text-slate-400 font-medium">Scenario:</span>
-                <span className="text-slate-200 font-mono font-semibold" data-testid="active-scenario">
-                  Monday Revenue Mystery
-                </span>
-              </div>
-
-              {/* ADR-006 Dual Health Indicator: Compute vs Quality */}
-              <div
-                className="flex items-center space-x-2 text-xs"
-                data-testid="dual-health-indicator"
-                aria-label="System Health Status"
-              >
-                {/* Compute Health Badge */}
-                <div
-                  className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700"
-                  title="Pipeline Compute Health"
-                >
-                  <span className="text-slate-400">Compute:</span>
-                  <span className="inline-flex items-center space-x-1 font-semibold text-status-healthy">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-status-healthy" />
-                    <span>SUCCESS</span>
-                  </span>
-                </div>
-
-                {/* Data Quality Health Badge */}
-                <div
-                  className="flex items-center space-x-1.5 px-2.5 py-1 rounded bg-slate-800 border border-slate-700"
-                  title="Data Quality Health"
-                >
-                  <span className="text-slate-400">Quality:</span>
-                  <span className="inline-flex items-center space-x-1 font-semibold text-status-corrupted">
-                    <AlertTriangle className="w-3.5 h-3.5 text-status-corrupted" />
-                    <span>CORRUPTED</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Global Alert Banner */}
+      {alert && (
+        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <AlertBanner
+            type={alert.type}
+            message={alert.message}
+            details={alert.details}
+            onClose={() => setAlert(null)}
+          />
         </div>
-
-        {/* Semantic Navigation Tabs */}
-        <nav
-          className="border-t border-slate-800/70 bg-slate-900/60"
-          aria-label="Observability Workspaces"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div
-              className="flex space-x-1 overflow-x-auto py-2 scrollbar-none"
-              role="tablist"
-              aria-label="Observability Workspaces"
-            >
-              {TABS.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    role="tab"
-                    id={`tab-${tab.id}`}
-                    aria-controls={`panel-${tab.id}`}
-                    aria-selected={isActive}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 px-3.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                      isActive
-                        ? 'bg-lux-700 text-white shadow-sm shadow-lux-700/30'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </nav>
-      </header>
+      )}
 
       {/* Main Workspace Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {/* Dataset Inspector Section */}
+        {isDatasetInspectorOpen && (
+          <section aria-label="Scenario Datasets Inspector">
+            <DatasetInspector
+              datasets={datasets}
+              isLoading={isLoadingDatasets}
+              onPreviewDataset={(dataset) => setPreviewingDataset(dataset)}
+              onOpenUpload={() => setIsUploadModalOpen(true)}
+              onRefresh={() => fetchDatasets(activeScenarioId)}
+            />
+          </section>
+        )}
+
+        {/* Tab Panel */}
         <div
           role="tabpanel"
           id={`panel-${activeTab}`}
@@ -244,27 +224,34 @@ export const App: React.FC = () => {
         </div>
       </main>
 
+      {/* Dataset Preview Modal */}
+      {previewingDataset && (
+        <DatasetPreviewModal
+          isOpen={Boolean(previewingDataset)}
+          datasetId={previewingDataset.id}
+          datasetName={previewingDataset.name}
+          onClose={() => setPreviewingDataset(null)}
+        />
+      )}
+
+      {/* Upload Custom Dataset Modal */}
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        activeScenarioId={activeScenarioId}
+        onUploadSuccess={handleUploadSuccess}
+      />
+
       {/* Footer */}
       <footer className="border-t border-slate-800 bg-slate-900/60 py-4 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 space-y-2 sm:space-y-0">
           <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-status-healthy"></span>
-            <span>Frontend Scaffolding Active</span>
-            <span>&bull;</span>
-            <span>Lux Purple Theme System</span>
+            <span>Lux Data Observability Platform</span>
+            <span>•</span>
+            <span className="text-lux-400 font-mono">v0.1.0</span>
           </div>
-          <div className="flex items-center space-x-4">
-            <a
-              href="http://localhost:8000/docs"
-              target="_blank"
-              rel="noreferrer"
-              className="hover:text-lux-300 transition-colors inline-flex items-center space-x-1"
-            >
-              <span>Backend API Docs</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-            <span>&bull;</span>
-            <span className="font-mono text-slate-400">Node v22 / Vite / React 18</span>
+          <div>
+            <span>Deterministic Quality Engine & Dependency Lineage</span>
           </div>
         </div>
       </footer>
