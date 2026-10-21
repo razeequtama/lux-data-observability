@@ -10,7 +10,7 @@ This document is the single source of truth for implementation tracking across e
 |---|---|---|---|
 | **M0** | Core Foundation, Tooling & Scaffolding | `T01`, `T02` | `COMPLETED` |
 | **M1** | Persistence, Scenario Data Foundation & Ingestion Engine | `T03`, `T04`, `T05` | `COMPLETED` |
-| **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `IN_PROGRESS` |
+| **M2** | Deterministic Data Quality Validation Engine | `T06`, `T07`, `T08` | `COMPLETED` |
 | **M3** | Lineage DAG Domain Engine & Graph Integrity Validator | `T09`, `T10`, `T11` | `NOT_STARTED` |
 | **M4** | Pipeline Observability & Run History | `T12`, `T13` | `NOT_STARTED` |
 | **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `NOT_STARTED` |
@@ -31,7 +31,7 @@ This document is the single source of truth for implementation tracking across e
 | `T05` | Dataset Ingestion, Scenario Loader & Upload Security Service | `T01`, `T03`, `T04` | `COMPLETED` | `pytest tests/integration/test_ingestion_api.py` 14 passed; `pytest` 43 passed; `ruff` and `mypy` 0 errors; load scenario (200), preview, 20MB limit (413), and path traversal rejection (400) verified |
 | `T06` | Validation Rule Framework & Core Rule Evaluators | `T01`, `T03` | `COMPLETED` | `pytest tests/unit/test_rules_core.py` 38 passed; full `pytest` 81 passed; `ruff` and `mypy` 0 errors; detected 15 duplicates in orders.csv and 8 negative inventory SKUs in inventory.csv |
 | `T07` | Relational, Temporal & Schema Rule Evaluators | `T06` | `COMPLETED` | `pytest tests/unit/test_rules_relational.py` 25 passed; full `pytest` 106 passed; `ruff` and `mypy` 0 errors; detected 24 orphaned items in order_items.csv and Sunday 4.47h gap in orders.csv; clean recovery verified |
-| `T08` | Validation Runner Service, Persistence & Structured Findings API | `T03`, `T05`, `T06`, `T07` | `NOT_STARTED` | — |
+| `T08` | Validation Runner Service, Persistence & Structured Findings API | `T03`, `T05`, `T06`, `T07` | `COMPLETED` | `pytest tests/integration/test_validations_api.py` 14 passed; full `pytest` 120 passed; `ruff` and `mypy` 0 errors; exactly 4 failed checks detected on defective fixtures; structured sample keys & capping verified |
 | `T09` | Lineage DAG Domain Engine & Graph Integrity Validator | `T01`, `T03` | `NOT_STARTED` | — |
 | `T10` | Downstream Impact Analysis Engine & Blast Radius Classifier | `T08`, `T09` | `NOT_STARTED` | — |
 | `T11` | Lineage & Impact REST API Endpoints | `T09`, `T10` | `NOT_STARTED` | — |
@@ -53,10 +53,11 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestone **M0** (`T01`, `T02`) and Milestone **M1** (`T03`, `T04`, `T05`) are `COMPLETED`. Milestone **M2** is `IN_PROGRESS` with `T06` and `T07` verified.
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), and **M2** (`T06`, `T07`, `T08`) are `COMPLETED`.
 - **Next Eligible Tasks:**
-  - `T08` (Validation Runner Service, Persistence & Structured Findings API) — Prerequisites satisfied (`T03`, `T05`, `T06`, `T07`). Concludes Milestone **M2**.
   - `T09` (Lineage DAG Domain Engine & Graph Integrity Validator) — Prerequisites satisfied (`T01`, `T03`). Initiates Milestone **M3**.
+  - `T12` (Pipeline Run History & Execution vs Quality Dual-Dimension Tracker) — Prerequisites satisfied (`T03`, `T08`). Initiates Milestone **M4**.
+  - `T16` (Frontend Navigation Shell, Scenario Switcher & Dataset Inspector) — Prerequisites satisfied (`T02`, `T05`). Initiates Milestone **M6**.
 
 ---
 
@@ -232,4 +233,45 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && mypy app` -> Success: no issues found in 42 source files.
   - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 975ms (zero frontend regressions).
 - **Remaining Limitations:** None. Relational, temporal, schema, and freshness evaluators are fully operational and verified. Ready for the validation runner service and structured findings API (`T08`).
+
+### `T08` — Validation Runner Service, Persistence & Structured Findings API
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/services/validation/runner.py`:
+    - `ValidationRunnerService`: Orchestrates quality validation runs against scenario datasets.
+    - Dataset context caching with cross-dataset accessibility for relational integrity evaluation.
+    - Rule discovery and execution through dynamic `RuleRegistry` evaluators.
+    - Bounded diagnostic evidence capping (`_cap_evidence_samples`) ensuring sample arrays (e.g. duplicate keys, orphaned records) do not exceed 50 items.
+    - Dual-dimension status derivation: maps failed or runtime error checks to run status `FAILED`, non-fatal checks to `WARNING`, and clean evaluations to `PASSED`.
+    - SQLite persistence for `ValidationRun` and granular `ValidationFinding` records with transactional rollback on failure.
+    - Filterable and paginated findings retrieval (`severity`, `status`, `dataset_id`, `limit`, `offset`).
+  - `backend/app/schemas/validation.py` & `backend/app/schemas/__init__.py`:
+    - `ValidationRunRequest`: Payload schema supporting scenario specification and optional target dataset filters.
+    - `ValidationRunResponse`: Full run execution summary conforming to API contracts.
+    - `ValidationFindingItem`: Structured finding schema with parsed diagnostic evidence and rule metadata.
+    - `ValidationFindingsListResponse`: Paginated findings envelope with total count and finding items.
+    - `ValidationRunListResponse`: Historical run list response schema.
+  - `backend/app/api/v1/validations.py` & `backend/app/api/v1/router.py`:
+    - `POST /api/v1/validations/run`: Triggers validation run for all or selected datasets.
+    - `GET /api/v1/validations/runs/{id}`: Retrieves validation run execution summary.
+    - `GET /api/v1/validations/runs`: Lists historical runs with optional scenario filter.
+    - `GET /api/v1/validations/runs/{id}/findings`: Returns granular findings filterable by severity, status, and dataset.
+  - `backend/tests/integration/test_validations_api.py`:
+    - 14-test integration suite asserting full API contracts, acceptance criteria, defective fixture defect counts, clean recovery validation, filtering, pagination, and error envelopes.
+- **Verification Evidence:**
+  - Defective *Monday Revenue Mystery* execution: Executed all 8 checks, yielding exactly 4 failed checks and 4 passed checks with overall status `FAILED`:
+    - `VAL-ORD-001`: 15 duplicate order IDs detected with line indices.
+    - `VAL-ORD-002`: 24 broken foreign keys detected with sample orphaned keys (`PRD-9001` to `PRD-9024`).
+    - `VAL-INV-001`: 8 negative inventory quantities detected.
+    - `VAL-FRESH-001`: Sunday 4.47h transaction gap flagged.
+  - Corrected fixture execution: Executed all 8 checks, yielding 8 passed checks, 0 failures, and overall status `PASSED`.
+  - Evidence capping: Bounded large error sets (>100 items) to 50 sample items with truncation flags.
+  - `cd backend && pytest tests/integration/test_validations_api.py -v` -> 14 passed in 2.62s.
+  - `cd backend && pytest` -> 120 passed in 6.34s (all unit & integration tests passing).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 58 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 44 source files.
+  - `cd frontend && npm test -- --run` -> Vitest 6/6 passed in 866ms (zero frontend regressions).
+- **Remaining Limitations:** None. Validation engine and REST endpoints are verified and ready for downstream impact tracing (`T10`), lineage DAG integration (`T09`), pipeline history tracking (`T12`), and UI findings explorer (`T17`).
+
 

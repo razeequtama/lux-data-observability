@@ -18,7 +18,12 @@ from app.schemas.validation import (
     RuleEvaluationResult,
     RuleSeverity,
     RuleStatus,
+    ValidationFindingItem,
+    ValidationFindingsListResponse,
     ValidationRuleConfig,
+    ValidationRunListResponse,
+    ValidationRunRequest,
+    ValidationRunResponse,
 )
 
 __all__ = [
@@ -37,5 +42,10 @@ __all__ = [
     "RuleStatus",
     "ScenarioDetail",
     "ScenarioSummary",
+    "ValidationFindingItem",
+    "ValidationFindingsListResponse",
     "ValidationRuleConfig",
+    "ValidationRunListResponse",
+    "ValidationRunRequest",
+    "ValidationRunResponse",
 ]

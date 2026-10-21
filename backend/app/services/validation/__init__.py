@@ -15,6 +15,7 @@ from app.services.validation.relational import (
     SchemaIntegrityRule,
     TemporalAnomalyRule,
 )
+from app.services.validation.runner import ValidationRunnerService
 
 __all__ = [
     "BaseValidationRule",
@@ -28,5 +29,6 @@ __all__ = [
     "TypeValidityRule",
     "UniquenessRule",
     "ValidationContext",
+    "ValidationRunnerService",
     "ValueRangeRule",
 ]
