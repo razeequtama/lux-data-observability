@@ -15,7 +15,7 @@ This document is the single source of truth for implementation tracking across e
 | **M4** | Pipeline Observability & Run History | `T12`, `T13` | `COMPLETED` |
 | **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `COMPLETED` |
 | **M6** | Frontend "Trace the Failure" Interactive UI | `T16`, `T17`, `T18`, `T19`, `T20` | `COMPLETED` |
-| **M7** | Recovery Verification & End-to-End Acceptance | `T21`, `T22`, `T23` | `IN_PROGRESS` |
+| **M7** | Recovery Verification & End-to-End Acceptance | `T21`, `T22`, `T23` | `COMPLETED` |
 | **M8** | Containerization & Operational Polish | `T24` | `NOT_STARTED` |
 
 ---
@@ -46,16 +46,16 @@ This document is the single source of truth for implementation tracking across e
 | `T20` | Investigation Workspace & Report Export Modal UI | `T15`, `T17`, `T18` | `COMPLETED` | `vitest` 128 passed (24 test files); `tsc` & `eslint` 0 errors; production build verified (514.83 kB); 3 boundary zones (facts, hypotheses, actions), automatic synthesis from findings & pipeline, report generation with sandboxed HTML iframe & formatted JSON preview, direct file downloads with blob URL memory cleanup verified |
 | `T21` | Recovery Verification Backend Engine | `T08`, `T10`, `T12` | `COMPLETED` | `pytest tests/integration/test_recovery_api.py tests/unit/test_recovery_service.py` 9 passed; full `pytest` 245 passed; `ruff` and `mypy` 0 errors; 4 defects resolved, quality health transitions to HEALTHY, downstream ALL_ASSETS_HEALTHY |
 | `T22` | Recovery Verification Frontend View | `T20`, `T21` | `COMPLETED` | `vitest` 145 passed (29 test files); `tsc` & `eslint` 0 errors; production build verified (545.45 kB); side-by-side run comparison, resolution checklist with green checkmarks, downstream recovery banner confirming trust restored in reports verified |
-| `T23` | Signature Scenario End-to-End Test Suite | `T01`–`T22` | `NOT_STARTED` | — |
+| `T23` | Signature Scenario End-to-End Test Suite | `T01`–`T22` | `COMPLETED` | `pytest tests/scenarios/test_monday_revenue_mystery.py` 9 passed; master E2E runs in 1.13s (< 2s acceptance threshold); full `pytest` 254 passed; `ruff` & `mypy` 0 errors; 100% assertions pass across all 8 stages |
 | `T24` | Docker Compose Orchestration & Production Polish | `T23` | `NOT_STARTED` | — |
 
 ---
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), **M5** (`T14`, `T15`), and **M6** (`T16`, `T17`, `T18`, `T19`, `T20`) are `COMPLETED`. Milestone **M7** is `IN_PROGRESS` with `T21` and `T22` `COMPLETED`.
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), **M5** (`T14`, `T15`), **M6** (`T16`, `T17`, `T18`, `T19`, `T20`), and **M7** (`T21`, `T22`, `T23`) are `COMPLETED`.
 - **Next Eligible Tasks:**
-  - `T23` (Signature Scenario End-to-End Test Suite) — Prerequisites satisfied (`T01` through `T22`). Comprehensive acceptance test programmatic verification of the complete 8-step "Trace the Failure" workflow.
+  - `T24` (Docker Compose Orchestration & Production Polish) — Prerequisites satisfied (`T23`). Final milestone M8 implementing containerization with Docker Compose, multi-stage Dockerfiles, production builds, and updated operational quickstart documentation.
 
 ---
 
@@ -870,6 +870,39 @@ This document is the single source of truth for implementation tracking across e
   - `cd frontend && npm run build` (`tsc && vite build`) -> Production build successful in 8.13s (HTML 1.01 kB, CSS 67.50 kB, JS 545.45 kB / gzip 150.21 kB).
   - `cd backend && pytest` -> 245 passed across 21 test files in 19.16s (zero regressions).
 - **Remaining Limitations:** None. Recovery Verification view is fully functional, styled with Lux Purple and accessible tokens, and verified against all acceptance criteria. Ready for `T23` (Signature Scenario End-to-End Test Suite).
+
+### `T23` — Signature Scenario End-to-End Test Suite
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/tests/scenarios/test_monday_revenue_mystery.py`:
+    - Comprehensive scenario acceptance test suite covering the entire 8-step "Trace the Failure" workflow for *Monday Revenue Mystery*.
+    - `test_monday_revenue_mystery_full_trace_the_failure_e2e`: Continuous end-to-end master test traversing the entire incident lifecycle in a single deterministic test session:
+      1. **Stage 1 (Ingestion):** Ingests defective scenario fixtures, verifying 4 loaded datasets (`orders`, `order_items`, `products`, `inventory`), 5,170 total records (1,250 orders, 3,420 items, 250 products, 250 inventory), 8 registered rules, and 16 DAG nodes.
+      2. **Stage 2 (Validation):** Executes validation engine, asserting `FAILED` status, 4 passed checks, 4 failed checks, and `CORRUPTED` quality health.
+      3. **Stage 3 (Evidence):** Asserts exact record counts and structured diagnostic evidence: 15 duplicate orders (`VAL-ORD-001`, `CRITICAL`), 24 broken foreign keys (`VAL-ORD-002`, `HIGH`), 8 negative stock quantities (`VAL-INV-001`, `HIGH`), and 1 temporal gap (`VAL-FRESH-001`, `MEDIUM`, max_gap_hours >= 4.0h). Verifies combined filter `severity=CRITICAL&status=FAILED` isolates `VAL-ORD-001`.
+      4. **Stage 4 (Lineage):** Asserts 16 nodes and 14 edges with Dagre layout `(x, y)` coordinates, acyclicity (`is_dag=True`, 0 cycles, 0 dangling edges), and upstream lineage ancestors of `report_exec_dash` (orders, items, products).
+      5. **Stage 5 (Impact):** Asserts downstream blast radius from `orders.csv` propagates through `dim_orders` (`DIRECTLY_AFFECTED`) to `agg_daily_revenue`, `metric_revenue`, and `report_exec_dash` (`POTENTIALLY_AFFECTED`) with full dependency paths and explanations. Asserts `src_inventory` blast radius isolates stock alerts and does not impact executive revenue dashboards.
+      6. **Stage 6 (Pipeline History):** Asserts dual-dimension tracking for the overnight ETL run (`pipe_run_20261020_0200`) with compute execution status `COMPLETED_SUCCESS` (exit 0) alongside data quality health `CORRUPTED`. Verifies `orders.csv` partition staleness (>0h behind SLA).
+      7. **Stage 7 (Reporting):** Synthesizes investigation workspace, generates immutable JSON and HTML report artifacts with physical files in `settings.artifacts_dir`, asserts CSP security headers (`default-src 'none'`, `style-src 'unsafe-inline'`, `sandbox`), auto-escaping, inlined CSS, no external `<script>`/`<link>` tags, and full report audit summary (8 total evaluated findings, 4 failed).
+      8. **Stage 8 (Recovery):** Triggers recovery verification, asserting transition from `CORRUPTED` to `HEALTHY`, 0 failed checks, all 4 defects `RESOLVED` (`FAILED` → `PASSED`), `ALL_ASSETS_HEALTHY` downstream recovery status, all 16 lineage DAG nodes restored to `HEALTHY`, freshness restored to `FRESH` (0.0h behind), and preservation of historical runs.
+    - Modular isolation tests for each of the 8 stages:
+      - `test_stage_1_scenario_ingestion_and_dataset_counts`
+      - `test_stage_2_quality_validations_execution`
+      - `test_stage_3_structured_row_evidence_and_capping`
+      - `test_stage_4_lineage_dag_integrity_and_traversal`
+      - `test_stage_5_downstream_impact_blast_radius_and_isolation`
+      - `test_stage_6_pipeline_observability_and_dual_dimension`
+      - `test_stage_7_investigation_and_safe_report_exports`
+      - `test_stage_8_recovery_verification_and_trust_restoration`
+- **Verification Evidence:**
+  - `cd backend && pytest tests/scenarios/test_monday_revenue_mystery.py::test_monday_revenue_mystery_full_trace_the_failure_e2e` -> 1 passed in 1.13s (exceeds < 2.0s acceptance criteria).
+  - `cd backend && pytest -v tests/scenarios/test_monday_revenue_mystery.py` -> 9 passed in 3.27s (100% assertions passed across all 8 workflow stages).
+  - `cd backend && pytest` -> 254 passed across 22 test files in 21.89s (zero regressions).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 92 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 64 source files.
+  - `cd frontend && npm run typecheck && npm run lint && npm test -- --run` -> `tsc` 0 errors, `eslint` 0 errors, `vitest` 145 passed across 29 test files in 15.39s.
+- **Remaining Limitations:** None. Entire 8-step "Trace the Failure" end-to-end workflow is fully automated, verified, and passing under 2 seconds. Ready for Milestone M8: `T24` (Docker Compose Orchestration & Production Polish).
 
 
 
