@@ -128,7 +128,7 @@ async def lux_exception_handler(_: Request, exc: LuxException) -> JSONResponse:
     )
 
 
-async def http_exception_handler(_: Request, exc: StarletteHTTPException) -> JSONResponse:
+async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     """Handle standard Starlette / FastAPI HTTP exceptions."""
     detail: object = exc.detail
     code = "HTTP_ERROR"
@@ -145,6 +145,9 @@ async def http_exception_handler(_: Request, exc: StarletteHTTPException) -> JSO
         message = detail
         if exc.status_code == status.HTTP_404_NOT_FOUND:
             code = "NOT_FOUND"
+            if message == "Not Found":
+                message = f"Endpoint or resource not found: {request.url.path}"
+                details = {"path": request.url.path}
         elif exc.status_code == status.HTTP_403_FORBIDDEN:
             code = "FORBIDDEN"
         elif exc.status_code == status.HTTP_401_UNAUTHORIZED:

@@ -120,5 +120,43 @@ describe('API Client', () => {
       expect(err.message).toBe('Connection refused');
     }
   });
+
+  it('handles FastAPI detail error format gracefully', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ detail: 'Not Found' }),
+    } as Response);
+
+    try {
+      await apiGet('/invalid-endpoint');
+    } catch (e) {
+      const err = e as ApiClientError;
+      expect(err.status).toBe(404);
+      expect(err.message).toBe('Not Found');
+    }
+  });
+
+  it('handles FastAPI detail array validation error format', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: false,
+      status: 422,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        detail: [
+          { loc: ['body', 'scenario_id'], msg: 'Field required', type: 'value_error' },
+        ],
+      }),
+    } as Response);
+
+    try {
+      await apiPost('/validations/run', {});
+    } catch (e) {
+      const err = e as ApiClientError;
+      expect(err.status).toBe(422);
+      expect(err.message).toContain('body.scenario_id: Field required');
+    }
+  });
 });
 

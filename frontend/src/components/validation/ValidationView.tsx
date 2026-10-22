@@ -21,6 +21,7 @@ import { AlertBanner } from '../common/AlertBanner';
 interface ValidationViewProps {
   scenarioId: string;
   fixtureVersion?: string;
+  lastReloadKey?: number | string;
   availableDatasets?: string[];
   onTraceImpact?: (finding: ValidationFindingItem) => void;
   onValidationRunComplete?: (run: ValidationRunResponse) => void;
@@ -29,6 +30,7 @@ interface ValidationViewProps {
 export const ValidationView: React.FC<ValidationViewProps> = ({
   scenarioId,
   fixtureVersion,
+  lastReloadKey,
   availableDatasets,
   onTraceImpact,
   onValidationRunComplete,
@@ -107,7 +109,7 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
 
   useEffect(() => {
     fetchLatestRun(scenarioId);
-  }, [fetchLatestRun, scenarioId, fixtureVersion]);
+  }, [fetchLatestRun, scenarioId, fixtureVersion, lastReloadKey]);
 
   const handleSelectFinding = (finding: ValidationFindingItem) => {
     setSelectedFinding(finding);

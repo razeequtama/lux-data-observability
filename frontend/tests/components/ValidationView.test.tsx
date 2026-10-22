@@ -150,4 +150,68 @@ describe('ValidationView Component', () => {
       expect(screen.getByTestId('validation-summary-cards')).toBeInTheDocument();
     });
   });
+
+  it('displays error alert when Execute Quality Validations fails', async () => {
+    const user = userEvent.setup();
+    vi.spyOn(validationsApi, 'listValidationRuns').mockResolvedValue([]);
+    vi.spyOn(validationsApi, 'executeValidationRun').mockRejectedValue(
+      new Error('Scenario monday_revenue_mystery was not found in the database. Please load the scenario first.')
+    );
+
+    render(
+      <ValidationView
+        scenarioId="monday_revenue_mystery"
+        availableDatasets={['orders', 'order_items']}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('execute-validations-btn')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByTestId('execute-validations-btn'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Validation Error')).toBeInTheDocument();
+      expect(
+        screen.getByText(/Scenario monday_revenue_mystery was not found in the database/)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('re-fetches runs when lastReloadKey prop changes', async () => {
+    const listSpy = vi.spyOn(validationsApi, 'listValidationRuns').mockResolvedValue([mockRun]);
+    vi.spyOn(validationsApi, 'listValidationFindings').mockResolvedValue({
+      run_id: mockRun.run_id,
+      total_findings: 1,
+      items: mockFindings,
+    });
+
+    const { rerender } = render(
+      <ValidationView
+        scenarioId="monday_revenue_mystery"
+        lastReloadKey={1}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('validation-summary-cards')).toBeInTheDocument();
+    });
+
+    expect(listSpy).toHaveBeenCalledTimes(1);
+
+    // Re-render with new lastReloadKey (scenario reloaded)
+    listSpy.mockResolvedValueOnce([]);
+    rerender(
+      <ValidationView
+        scenarioId="monday_revenue_mystery"
+        lastReloadKey={2}
+      />
+    );
+
+    await waitFor(() => {
+      expect(listSpy).toHaveBeenCalledTimes(2);
+      expect(screen.getByTestId('no-runs-empty-state')).toBeInTheDocument();
+    });
+  });
 });

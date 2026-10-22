@@ -31,6 +31,7 @@ export const App: React.FC = () => {
   const [activeScenarioId, setActiveScenarioId] = useState<string>('monday_revenue_mystery');
   const [activeFixtureVersion, setActiveFixtureVersion] = useState<FixtureVersion>('defective');
   const [datasets, setDatasets] = useState<DatasetResponse[]>([]);
+  const [scenarioReloadCounter, setScenarioReloadCounter] = useState(0);
 
   // UI state
   const [isDatasetInspectorOpen, setIsDatasetInspectorOpen] = useState(true);
@@ -85,6 +86,7 @@ export const App: React.FC = () => {
 
   const handleSelectScenario = (id: string) => {
     setActiveScenarioId(id);
+    setScenarioReloadCounter((prev) => prev + 1);
     fetchDatasets(id);
   };
 
@@ -98,6 +100,7 @@ export const App: React.FC = () => {
     try {
       const res = await loadScenario(scenarioId, version);
       setActiveFixtureVersion(version);
+      setScenarioReloadCounter((prev) => prev + 1);
       setAlert({
         type: 'success',
         message: 'Scenario Loaded Successfully',
@@ -121,6 +124,7 @@ export const App: React.FC = () => {
     setAlert(null);
     try {
       const res = await unloadScenario(scenarioId);
+      setScenarioReloadCounter((prev) => prev + 1);
       setAlert({
         type: 'info',
         message: 'Scenario Unloaded',
@@ -226,6 +230,7 @@ export const App: React.FC = () => {
             <ValidationView
               scenarioId={activeScenarioId}
               fixtureVersion={activeFixtureVersion}
+              lastReloadKey={scenarioReloadCounter}
               availableDatasets={datasets.map((d) => d.id)}
               onTraceImpact={(finding) => {
                 setSelectedFindingForImpact(finding);
@@ -241,6 +246,7 @@ export const App: React.FC = () => {
           ) : activeTab === 'lineage' || activeTab === 'impact' ? (
             <LineageView
               scenarioId={activeScenarioId}
+              lastReloadKey={scenarioReloadCounter}
               initialSelectedNodeId={selectedLineageNodeId}
               initialTargetFinding={selectedFindingForImpact}
               onSelectNode={(nodeId) => {
@@ -250,6 +256,7 @@ export const App: React.FC = () => {
           ) : activeTab === 'pipelines' ? (
             <PipelineObservabilityView
               scenarioId={activeScenarioId}
+              lastReloadKey={scenarioReloadCounter}
               onTraceImpact={() => {
                 setSelectedLineageNodeId('src_orders');
                 setSelectedFindingForImpact(null);
@@ -265,6 +272,7 @@ export const App: React.FC = () => {
           ) : activeTab === 'investigation' ? (
             <InvestigationWorkspace
               scenarioId={activeScenarioId}
+              lastReloadKey={scenarioReloadCounter}
               onNavigateToLineage={(nodeId) => {
                 setSelectedLineageNodeId(nodeId || null);
                 setActiveTab('lineage');

@@ -26,12 +26,14 @@ import { ReportModal } from './ReportModal';
 
 export interface InvestigationWorkspaceProps {
   scenarioId: string;
+  lastReloadKey?: number | string;
   onNavigateToLineage?: (nodeId?: string) => void;
   onNavigateToValidations?: () => void;
 }
 
 export const InvestigationWorkspace: React.FC<InvestigationWorkspaceProps> = ({
   scenarioId,
+  lastReloadKey,
   onNavigateToLineage,
   onNavigateToValidations,
 }) => {
@@ -97,7 +99,7 @@ export const InvestigationWorkspace: React.FC<InvestigationWorkspaceProps> = ({
 
   useEffect(() => {
     fetchInvestigations(false);
-  }, [fetchInvestigations]);
+  }, [fetchInvestigations, lastReloadKey]);
 
   const handleSynthesize = async () => {
     setIsSynthesizing(true);

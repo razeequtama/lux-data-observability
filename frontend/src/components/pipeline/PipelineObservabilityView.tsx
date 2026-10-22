@@ -13,6 +13,7 @@ import { FreshnessView } from './FreshnessView';
 
 interface PipelineObservabilityViewProps {
   scenarioId: string;
+  lastReloadKey?: number | string;
   onTraceImpact?: () => void;
 }
 
@@ -20,6 +21,7 @@ export type PipelineViewSubTab = 'history' | 'freshness' | 'combined';
 
 export const PipelineObservabilityView: React.FC<PipelineObservabilityViewProps> = ({
   scenarioId,
+  lastReloadKey,
   onTraceImpact,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<PipelineViewSubTab>('combined');
@@ -52,7 +54,7 @@ export const PipelineObservabilityView: React.FC<PipelineObservabilityViewProps>
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [fetchData, lastReloadKey]);
 
   // Find any run exhibiting the dual-dimension anomaly (compute SUCCESS but quality CORRUPTED)
   const anomalousRun = runs.find(

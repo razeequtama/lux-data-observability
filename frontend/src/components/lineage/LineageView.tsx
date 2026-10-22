@@ -38,6 +38,7 @@ import {
 
 export interface LineageViewProps {
   scenarioId?: string;
+  lastReloadKey?: number | string;
   initialSelectedNodeId?: string | null;
   initialTargetFinding?: {
     id: string;
@@ -59,6 +60,7 @@ const nodeTypes: NodeTypes = {
 
 export const LineageView: React.FC<LineageViewProps> = ({
   scenarioId = 'monday_revenue_mystery',
+  lastReloadKey,
   initialSelectedNodeId = null,
   initialTargetFinding = null,
   onSelectNode,
@@ -139,7 +141,7 @@ export const LineageView: React.FC<LineageViewProps> = ({
 
   useEffect(() => {
     loadGraph();
-  }, [loadGraph]);
+  }, [loadGraph, lastReloadKey]);
 
   // Execute blast radius trace and highlight downstream paths
   const selectAndTraceNode = useCallback(

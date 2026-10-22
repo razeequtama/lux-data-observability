@@ -43,16 +43,48 @@ async function handleResponse<T>(response: Response): Promise<T> {
   const isJson = contentType && contentType.includes('application/json');
 
   if (!response.ok) {
-    if (isJson) {
+    if (isJson && typeof response.json === 'function') {
       try {
-        const errorBody = (await response.json()) as ApiErrorResponse;
-        if (errorBody && errorBody.error) {
-          throw new ApiClientError(
-            response.status,
-            errorBody.error.message || `Request failed with status ${response.status}`,
-            errorBody.error.code || 'UNKNOWN_ERROR',
-            errorBody.error.details
-          );
+        const errorBody = (await response.json()) as Partial<ApiErrorResponse> & Record<string, unknown>;
+        if (errorBody && typeof errorBody === 'object') {
+          // Lux standard envelope: { error: { message, code, details } }
+          const errorObj = errorBody.error as Record<string, unknown> | undefined;
+          if (errorObj && typeof errorObj === 'object') {
+            throw new ApiClientError(
+              response.status,
+              (errorObj.message as string) || `Request failed with status ${response.status}`,
+              (errorObj.code as string) || `HTTP_${response.status}`,
+              errorObj.details as Record<string, unknown> | undefined
+            );
+          }
+          // FastAPI standard envelope: { detail: string | array }
+          if (errorBody.detail !== undefined) {
+            let detailMessage = '';
+            if (typeof errorBody.detail === 'string') {
+              detailMessage = errorBody.detail;
+            } else if (Array.isArray(errorBody.detail)) {
+              detailMessage = errorBody.detail
+                .map((err: { msg?: string; loc?: (string | number)[] }) =>
+                  err.msg ? `${err.loc ? err.loc.join('.') + ': ' : ''}${err.msg}` : JSON.stringify(err)
+                )
+                .join('; ');
+            } else {
+              detailMessage = JSON.stringify(errorBody.detail);
+            }
+            throw new ApiClientError(
+              response.status,
+              detailMessage || `Request failed with status ${response.status}`,
+              `HTTP_${response.status}`,
+              errorBody
+            );
+          }
+          if (errorBody.message && typeof errorBody.message === 'string') {
+            throw new ApiClientError(
+              response.status,
+              errorBody.message,
+              (errorBody.code as string) || `HTTP_${response.status}`
+            );
+          }
         }
       } catch (e) {
         if (e instanceof ApiClientError) {
@@ -60,7 +92,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
         }
       }
     }
-    const text = await response.text().catch(() => '');
+    const text = typeof response.text === 'function' ? await response.text().catch(() => '') : '';
     throw new ApiClientError(
       response.status,
       text || `Request failed with status ${response.status}`,
