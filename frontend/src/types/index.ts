@@ -7,3 +7,4 @@ export * from './impact';
 export * from './pipeline';
 export * from './investigation';
 export * from './report';
+export * from './recovery';

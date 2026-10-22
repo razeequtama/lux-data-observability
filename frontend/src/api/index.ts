@@ -6,3 +6,4 @@ export * from './lineage';
 export * from './pipelines';
 export * from './investigations';
 export * from './reports';
+export * from './recovery';

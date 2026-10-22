@@ -7,6 +7,8 @@ import * as validationsApi from '../src/api/validations';
 import * as lineageApi from '../src/api/lineage';
 import * as pipelinesApi from '../src/api/pipelines';
 import * as investigationsApi from '../src/api/investigations';
+import * as recoveryApi from '../src/api/recovery';
+import { RecoveryVerifyResponse } from '../src/types';
 
 describe('Lux App Shell Component', () => {
   const mockScenarios = [
@@ -156,11 +158,14 @@ describe('Lux App Shell Component', () => {
 
     // Switch to Recovery tab
     const recoveryTab = screen.getByRole('tab', { name: /recovery/i });
-    fireEvent.click(recoveryTab);
+    await act(async () => {
+      fireEvent.click(recoveryTab);
+    });
 
     expect(recoveryTab).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('heading', { level: 1, name: /recovery/i })).toBeInTheDocument();
     expect(screen.getByText(/before vs after verification/i)).toBeInTheDocument();
+    expect(screen.getByTestId('recovery-diff-view')).toBeInTheDocument();
 
     // Switch to Pipelines tab
     const pipelinesTab = screen.getByRole('tab', { name: /pipelines/i });
@@ -271,4 +276,64 @@ describe('Lux App Shell Component', () => {
     expect(screen.getByText('Upload Custom Dataset')).toBeInTheDocument();
     expect(screen.getByTestId('dropzone')).toBeInTheDocument();
   });
+
+  it('switches to Recovery tab and executes recovery verification successfully', async () => {
+    const mockRecovery: RecoveryVerifyResponse = {
+      scenario_id: 'monday_revenue_mystery',
+      comparison: {
+        previous_run: {
+          run_id: 'val_run_18f6e2b4',
+          fixture_version: 'defective',
+          failed_checks: 4,
+          quality_health: 'CORRUPTED',
+          total_checks: 8,
+          passed_checks: 4,
+          execution_duration_ms: 28,
+          executed_at: '2026-10-21T02:00:00Z',
+        },
+        current_run: {
+          run_id: 'val_run_29a7f3c5',
+          fixture_version: 'corrected',
+          failed_checks: 0,
+          quality_health: 'HEALTHY',
+          total_checks: 8,
+          passed_checks: 8,
+          execution_duration_ms: 20,
+          executed_at: '2026-10-21T02:05:00Z',
+        },
+        resolved_findings: [
+          {
+            rule_id: 'VAL-ORD-001',
+            rule_name: 'Order ID Uniqueness Check',
+            status: 'RESOLVED',
+            severity: 'CRITICAL',
+            category: 'UNIQUENESS',
+            dataset_id: 'orders.csv',
+            previous_status: 'FAILED',
+            current_status: 'PASSED',
+            message: 'Zero duplicate order IDs found',
+          },
+        ],
+        downstream_recovery_status: 'ALL_ASSETS_HEALTHY',
+      },
+    };
+    vi.spyOn(recoveryApi, 'verifyRecovery').mockResolvedValue(mockRecovery);
+
+    await renderApp();
+
+    const recoveryTab = screen.getByRole('tab', { name: /recovery/i });
+    await act(async () => {
+      fireEvent.click(recoveryTab);
+    });
+
+    const verifyBtn = screen.getByTestId('verify-recovery-cta-btn');
+    await act(async () => {
+      fireEvent.click(verifyBtn);
+    });
+
+    expect(recoveryApi.verifyRecovery).toHaveBeenCalledWith('monday_revenue_mystery', 'corrected');
+    expect(await screen.findByText(/Recovery Verified Successfully/i)).toBeInTheDocument();
+    expect(screen.getByTestId('downstream-recovery-banner')).toBeInTheDocument();
+  });
 });
+

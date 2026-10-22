@@ -9,6 +9,7 @@ import { ValidationView } from './components/validation/ValidationView';
 import { LineageView } from './components/lineage/LineageView';
 import { PipelineObservabilityView } from './components/pipeline';
 import { InvestigationWorkspace } from './components/reports';
+import { RecoveryDiffView } from './components/recovery';
 import {
   listScenarios,
   loadScenario,
@@ -270,6 +271,27 @@ export const App: React.FC = () => {
               }}
               onNavigateToValidations={() => {
                 setActiveTab('validations');
+              }}
+            />
+          ) : activeTab === 'recovery' ? (
+            <RecoveryDiffView
+              scenarioId={activeScenarioId}
+              onNavigateToLineage={() => {
+                setActiveTab('lineage');
+                setSelectedFindingForImpact(null);
+              }}
+              onNavigateToValidations={() => {
+                setActiveTab('validations');
+              }}
+              onRecoveryVerified={(comparison) => {
+                setActiveFixtureVersion('corrected');
+                fetchDatasets(activeScenarioId);
+                fetchScenarios();
+                setAlert({
+                  type: 'success',
+                  message: 'Recovery Verified Successfully',
+                  details: `Scenario "${activeScenarioId}" successfully verified on corrected fixtures. All ${comparison.resolved_findings.length} findings resolved and downstream assets are healthy.`,
+                });
               }}
             />
           ) : (

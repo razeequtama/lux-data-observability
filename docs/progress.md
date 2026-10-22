@@ -45,7 +45,7 @@ This document is the single source of truth for implementation tracking across e
 | `T19` | Pipeline Observability, Freshness & Run History UI | `T12`, `T13`, `T16` | `COMPLETED` | `vitest` 108 passed (20 test files); `tsc` & `eslint` 0 errors; production build verified (480.13 kB); overnight run verified with `COMPLETED_SUCCESS` compute badge alongside `CORRUPTED` data health badge; `orders.csv` partition staleness (5.99h behind SLA) and dual-dimension callout verified |
 | `T20` | Investigation Workspace & Report Export Modal UI | `T15`, `T17`, `T18` | `COMPLETED` | `vitest` 128 passed (24 test files); `tsc` & `eslint` 0 errors; production build verified (514.83 kB); 3 boundary zones (facts, hypotheses, actions), automatic synthesis from findings & pipeline, report generation with sandboxed HTML iframe & formatted JSON preview, direct file downloads with blob URL memory cleanup verified |
 | `T21` | Recovery Verification Backend Engine | `T08`, `T10`, `T12` | `COMPLETED` | `pytest tests/integration/test_recovery_api.py tests/unit/test_recovery_service.py` 9 passed; full `pytest` 245 passed; `ruff` and `mypy` 0 errors; 4 defects resolved, quality health transitions to HEALTHY, downstream ALL_ASSETS_HEALTHY |
-| `T22` | Recovery Verification Frontend View | `T20`, `T21` | `NOT_STARTED` | — |
+| `T22` | Recovery Verification Frontend View | `T20`, `T21` | `COMPLETED` | `vitest` 145 passed (29 test files); `tsc` & `eslint` 0 errors; production build verified (545.45 kB); side-by-side run comparison, resolution checklist with green checkmarks, downstream recovery banner confirming trust restored in reports verified |
 | `T23` | Signature Scenario End-to-End Test Suite | `T01`–`T22` | `NOT_STARTED` | — |
 | `T24` | Docker Compose Orchestration & Production Polish | `T23` | `NOT_STARTED` | — |
 
@@ -53,9 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), **M5** (`T14`, `T15`), and **M6** (`T16`, `T17`, `T18`, `T19`, `T20`) are `COMPLETED`. Milestone **M7** is `IN_PROGRESS` with `T21` `COMPLETED`.
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), **M5** (`T14`, `T15`), and **M6** (`T16`, `T17`, `T18`, `T19`, `T20`) are `COMPLETED`. Milestone **M7** is `IN_PROGRESS` with `T21` and `T22` `COMPLETED`.
 - **Next Eligible Tasks:**
-  - `T22` (Recovery Verification Frontend View) — Prerequisites satisfied (`T20`, `T21`). Displays side-by-side comparison tables, resolution status indicators, and downstream recovery badges.
+  - `T23` (Signature Scenario End-to-End Test Suite) — Prerequisites satisfied (`T01` through `T22`). Comprehensive acceptance test programmatic verification of the complete 8-step "Trace the Failure" workflow.
 
 ---
 
@@ -827,6 +827,49 @@ This document is the single source of truth for implementation tracking across e
   - `cd backend && mypy app` -> Success: no issues found in 64 source files.
   - `cd frontend && npm run typecheck && npm run lint && npm test -- --run` -> Vitest 132 passed across 24 test files; `tsc` and `eslint` 0 errors.
 - **Remaining Limitations:** None. Backend recovery verification engine is fully operational, thoroughly tested, and ready for frontend integration in `T22`.
+
+### `T22` — Recovery Verification Frontend View
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `frontend/src/types/recovery.ts`:
+    - `RecoveryRunSummary`: Run metrics (`run_id`, `fixture_version`, `failed_checks`, `quality_health`, `total_checks`, `passed_checks`, `execution_duration_ms`, `executed_at`).
+    - `ResolvedFindingItem`: Individual finding resolution status (`RESOLVED` vs `UNRESOLVED`, severity, category, dataset ID, before status, after status, diagnostic message).
+    - `RecoveryComparison`: Full before-and-after comparison envelope (`previous_run`, `current_run`, `resolved_findings`, `downstream_recovery_status`).
+    - `RecoveryVerifyRequest` and `RecoveryVerifyResponse`.
+  - `frontend/src/types/index.ts`:
+    - Exported all recovery type definitions.
+  - `frontend/src/api/recovery.ts`:
+    - Implemented `verifyRecovery(scenarioId, targetFixtureVersion = 'corrected')` dispatching `POST /api/v1/recovery/verify`.
+  - `frontend/src/api/index.ts`:
+    - Exported recovery API methods.
+  - `frontend/src/components/recovery/DownstreamRecoveryBanner.tsx`:
+    - Trust restoration banner for `ALL_ASSETS_HEALTHY` (`ShieldCheck`, "Downstream Trust Restored: All Lineage Assets Healthy", confirming derived tables, metrics, and Executive Monday Dashboard integrity) with quick action to navigate to the Lineage DAG.
+    - Handles `PARTIALLY_RECOVERED` (amber warning) and `RECOVERY_FAILED` (rose corruption) states.
+  - `frontend/src/components/recovery/ComparisonMetricCards.tsx`:
+    - Side-by-side run cards comparing Before Recovery (Defective, `CORRUPTED`, 4 failed) vs After Recovery (Clean, `HEALTHY`, 0 failed) with run IDs, timestamps, execution durations, and resolution delta (+6ms performance, 4 checks resolved).
+  - `frontend/src/components/recovery/ResolvedChecksList.tsx`:
+    - Checklist of evaluated quality checks with green `RESOLVED` badges (`CheckCircle2`), transition chips (`FAILED` → `PASSED`), rule IDs, names, dataset tags, severity chips, and resolution percentage (4 of 4 Resolved, 100%).
+    - Includes interactive filter pills (`All (4)`, `Resolved (4)`, `Unresolved (0)`).
+  - `frontend/src/components/recovery/RecoveryDiffView.tsx`:
+    - Complete view orchestrating the recovery workflow: initial onboarding state with defect summary and primary CTA button, loading spinner state during re-execution, error alert handling, comparison results, and cross-workspace navigation links to inspect clean validations and restored lineage.
+  - `frontend/src/components/recovery/index.ts`:
+    - Barrel export for all recovery UI components.
+  - `frontend/src/App.tsx`:
+    - Mounted `RecoveryDiffView` into the `recovery` tab, updating scenario fixture state to `corrected` upon successful verification and raising a global success alert.
+  - Test Suite Deliverables:
+    - `frontend/tests/api/recovery.test.ts`: Unit tests for `verifyRecovery` client.
+    - `frontend/tests/components/DownstreamRecoveryBanner.test.tsx`: Tests for all 3 health states and lineage navigation.
+    - `frontend/tests/components/ComparisonMetricCards.test.tsx`: Tests for side-by-side metrics and delta calculations.
+    - `frontend/tests/components/ResolvedChecksList.test.tsx`: Tests for 100% resolution checklist, checkmarks, and filters.
+    - `frontend/tests/components/RecoveryDiffView.test.tsx`: Tests for initial callout, verify CTA trigger, before-and-after diff rendering, re-verify button, error alerts, and cross-tab navigation.
+    - `frontend/tests/App.test.tsx`: End-to-end component test verifying tab switching to Recovery and executing recovery verification.
+- **Verification Evidence:**
+  - `cd frontend && npm test -- --run` (`vitest run`) -> 145 passed across 29 test files in 20.96s (100% pass rate).
+  - `cd frontend && npm run typecheck` (`tsc --noEmit`) -> 0 errors.
+  - `cd frontend && npm run lint` (`eslint .`) -> 0 warnings, 0 errors.
+  - `cd frontend && npm run build` (`tsc && vite build`) -> Production build successful in 8.13s (HTML 1.01 kB, CSS 67.50 kB, JS 545.45 kB / gzip 150.21 kB).
+  - `cd backend && pytest` -> 245 passed across 21 test files in 19.16s (zero regressions).
+- **Remaining Limitations:** None. Recovery Verification view is fully functional, styled with Lux Purple and accessible tokens, and verified against all acceptance criteria. Ready for `T23` (Signature Scenario End-to-End Test Suite).
 
 
 
