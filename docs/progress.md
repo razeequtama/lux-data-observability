@@ -15,7 +15,7 @@ This document is the single source of truth for implementation tracking across e
 | **M4** | Pipeline Observability & Run History | `T12`, `T13` | `COMPLETED` |
 | **M5** | Incident Investigation & Safe Report Generation | `T14`, `T15` | `COMPLETED` |
 | **M6** | Frontend "Trace the Failure" Interactive UI | `T16`, `T17`, `T18`, `T19`, `T20` | `COMPLETED` |
-| **M7** | Recovery Verification & End-to-End Acceptance | `T21`, `T22`, `T23` | `NOT_STARTED` |
+| **M7** | Recovery Verification & End-to-End Acceptance | `T21`, `T22`, `T23` | `IN_PROGRESS` |
 | **M8** | Containerization & Operational Polish | `T24` | `NOT_STARTED` |
 
 ---
@@ -44,7 +44,7 @@ This document is the single source of truth for implementation tracking across e
 | `T18` | Interactive Lineage DAG & Blast Radius Visualization UI | `T11`, `T16` | `COMPLETED` | `vitest` 83 passed (15 test files); `tsc` & `eslint` 0 errors; production build verified (451.95 kB); all 16 nodes rendered with Dagre coordinates, custom dual-status chips (Compute Exit 0 vs Quality Corrupted), selecting src_orders highlights downstream blast radius through to report_exec_dash, and NodeDetailsPanel verified |
 | `T19` | Pipeline Observability, Freshness & Run History UI | `T12`, `T13`, `T16` | `COMPLETED` | `vitest` 108 passed (20 test files); `tsc` & `eslint` 0 errors; production build verified (480.13 kB); overnight run verified with `COMPLETED_SUCCESS` compute badge alongside `CORRUPTED` data health badge; `orders.csv` partition staleness (5.99h behind SLA) and dual-dimension callout verified |
 | `T20` | Investigation Workspace & Report Export Modal UI | `T15`, `T17`, `T18` | `COMPLETED` | `vitest` 128 passed (24 test files); `tsc` & `eslint` 0 errors; production build verified (514.83 kB); 3 boundary zones (facts, hypotheses, actions), automatic synthesis from findings & pipeline, report generation with sandboxed HTML iframe & formatted JSON preview, direct file downloads with blob URL memory cleanup verified |
-| `T21` | Recovery Verification Backend Engine | `T08`, `T10`, `T12` | `NOT_STARTED` | — |
+| `T21` | Recovery Verification Backend Engine | `T08`, `T10`, `T12` | `COMPLETED` | `pytest tests/integration/test_recovery_api.py tests/unit/test_recovery_service.py` 9 passed; full `pytest` 245 passed; `ruff` and `mypy` 0 errors; 4 defects resolved, quality health transitions to HEALTHY, downstream ALL_ASSETS_HEALTHY |
 | `T22` | Recovery Verification Frontend View | `T20`, `T21` | `NOT_STARTED` | — |
 | `T23` | Signature Scenario End-to-End Test Suite | `T01`–`T22` | `NOT_STARTED` | — |
 | `T24` | Docker Compose Orchestration & Production Polish | `T23` | `NOT_STARTED` | — |
@@ -53,9 +53,9 @@ This document is the single source of truth for implementation tracking across e
 
 ## 3. Current Focus & Next Steps
 
-- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), **M5** (`T14`, `T15`), and **M6** (`T16`, `T17`, `T18`, `T19`, `T20`) are `COMPLETED`. Milestone **M7** (Recovery Verification & End-to-End Acceptance) is ready to begin.
+- **Current State:** Milestones **M0** (`T01`, `T02`), **M1** (`T03`, `T04`, `T05`), **M2** (`T06`, `T07`, `T08`), **M3** (`T09`, `T10`, `T11`), **M4** (`T12`, `T13`), **M5** (`T14`, `T15`), and **M6** (`T16`, `T17`, `T18`, `T19`, `T20`) are `COMPLETED`. Milestone **M7** is `IN_PROGRESS` with `T21` `COMPLETED`.
 - **Next Eligible Tasks:**
-  - `T21` (Recovery Verification Backend Engine) — Prerequisites satisfied (`T08`, `T10`, `T12`). Begins Milestone **M7** (Recovery Verification & End-to-End Acceptance).
+  - `T22` (Recovery Verification Frontend View) — Prerequisites satisfied (`T20`, `T21`). Displays side-by-side comparison tables, resolution status indicators, and downstream recovery badges.
 
 ---
 
@@ -795,6 +795,39 @@ This document is the single source of truth for implementation tracking across e
   - `cd frontend && npm run build` (`tsc && vite build`) -> Built production bundle in 9.84s (HTML 1.01 kB, CSS 61.34 kB, JS 514.83 kB / gzip 145.14 kB).
   - `cd backend && pytest` -> 235 passed across 19 test files in 16.75s (zero regressions).
 - **Remaining Limitations:** None. Investigation workspace, fact-hypothesis boundary separation, and incident report generation modal with HTML/JSON preview and downloads are fully operational and verified. Milestone **M6** is `COMPLETED`. Ready for `T21` (Recovery Verification Backend Engine).
+
+### `T21` — Recovery Verification Backend Engine
+- **Status:** `COMPLETED`
+- **Key Deliverables:**
+  - `backend/app/schemas/recovery.py`:
+    - `RecoveryRunSummary`: Captures run metrics (`run_id`, `fixture_version`, `failed_checks`, `quality_health`, total/passed checks, duration, and timestamp).
+    - `ResolvedFindingItem`: Individual finding resolution status (`RESOLVED` vs `UNRESOLVED`, severity, category, dataset ID, previous status, current status, and message).
+    - `RecoveryComparison`: Full before-and-after comparison envelope (`previous_run`, `current_run`, `resolved_findings`, `downstream_recovery_status`).
+    - `RecoveryVerifyRequest` and `RecoveryVerifyResponse`: Input and output schemas matching Section 8 of `api-contracts.md`.
+  - `backend/app/schemas/__init__.py`:
+    - Exported all recovery schema models.
+  - `backend/app/services/validation/recovery.py` (`RecoveryService`):
+    - `swap_fixtures`: Safely updates scenario dataset file paths, file sizes, record counts, and schema definitions to clean `corrected/` fixtures without destroying prior validation runs or findings history. Reloads `PipelineRun` and `FreshnessCheck` records from `corrected/pipeline_history.json`.
+    - `verify_recovery`: Orchestrates baseline run resolution, clean fixture swapping, validation re-execution, before-and-after diff calculation, and downstream Lineage DAG health assessment.
+    - Resolves all 4 defective checks (`VAL-ORD-001`, `VAL-ORD-002`, `VAL-INV-001`, `VAL-FRESH-001`) from `FAILED` to `RESOLVED`.
+    - Verifies that zero failed root nodes causes all Lineage DAG nodes to transition to `HEALTHY`, yielding `downstream_recovery_status="ALL_ASSETS_HEALTHY"`.
+    - Accurately reports `PARTIALLY_RECOVERED` when simulated with partial fixes.
+  - `backend/app/api/v1/recovery.py` & `backend/app/api/v1/router.py`:
+    - Exposes `POST /api/v1/recovery/verify` endpoint with dependency injection and error handling.
+  - `backend/tests/integration/test_recovery_api.py`:
+    - 4 integration tests verifying acceptance criteria, automatic baseline run execution when validation was not run prior to recovery, lineage and freshness updates, and 404 on unknown scenarios.
+  - `backend/tests/unit/test_recovery_service.py`:
+    - 5 unit tests verifying invalid fixture version handling, missing scenario handling, live service swapping and recovery verification, and partial recovery edge cases.
+- **Verification Evidence:**
+  - `cd backend && pytest tests/integration/test_recovery_api.py tests/unit/test_recovery_service.py` -> 9 passed in 1.49s.
+  - `cd backend && pytest tests/integration/test_recovery_api.py` -> 4 passed in 0.90s.
+  - `cd backend && pytest` -> 245 passed across 21 test files in 14.82s (zero regressions).
+  - `cd backend && ruff check .` -> All checks passed! (0 lint errors).
+  - `cd backend && ruff format --check .` -> 91 files already formatted.
+  - `cd backend && mypy app` -> Success: no issues found in 64 source files.
+  - `cd frontend && npm run typecheck && npm run lint && npm test -- --run` -> Vitest 132 passed across 24 test files; `tsc` and `eslint` 0 errors.
+- **Remaining Limitations:** None. Backend recovery verification engine is fully operational, thoroughly tested, and ready for frontend integration in `T22`.
+
 
 
 

@@ -47,6 +47,13 @@ from app.schemas.pipeline import (
     PipelineStepLog,
     QualityHealthStatus,
 )
+from app.schemas.recovery import (
+    RecoveryComparison,
+    RecoveryRunSummary,
+    RecoveryVerifyRequest,
+    RecoveryVerifyResponse,
+    ResolvedFindingItem,
+)
 from app.schemas.report import (
     IncidentReportData,
     ReportArtifactResponse,
@@ -119,6 +126,11 @@ __all__ = [
     "QualityHealthStatus",
     "ReactFlowEdge",
     "ReactFlowNode",
+    "RecoveryComparison",
+    "RecoveryRunSummary",
+    "RecoveryVerifyRequest",
+    "RecoveryVerifyResponse",
+    "ResolvedFindingItem",
     "IncidentReportData",
     "ReportArtifactResponse",
     "ReportFindingDetail",
