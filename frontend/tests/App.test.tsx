@@ -191,6 +191,10 @@ describe('Lux App Shell Component', () => {
   it('loads and displays datasets with row counts and columns', async () => {
     await renderApp();
 
+    // Open dataset inspector modal
+    const toggleBtn = screen.getByTestId('toggle-dataset-inspector-btn');
+    fireEvent.click(toggleBtn);
+
     expect(screen.getByText('orders.csv')).toBeInTheDocument();
     expect(screen.getByText('1,250')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
@@ -256,15 +260,15 @@ describe('Lux App Shell Component', () => {
   it('toggles dataset inspector visibility', async () => {
     await renderApp();
 
-    expect(screen.getByTestId('dataset-inspector')).toBeInTheDocument();
+    expect(screen.queryByTestId('dataset-inspector')).not.toBeInTheDocument();
 
     const toggleBtn = screen.getByTestId('toggle-dataset-inspector-btn');
     fireEvent.click(toggleBtn);
 
-    expect(screen.queryByTestId('dataset-inspector')).not.toBeInTheDocument();
+    expect(screen.getByTestId('dataset-inspector')).toBeInTheDocument();
 
     fireEvent.click(toggleBtn);
-    expect(screen.getByTestId('dataset-inspector')).toBeInTheDocument();
+    expect(screen.queryByTestId('dataset-inspector')).not.toBeInTheDocument();
   });
 
   it('opens upload modal when header upload button is clicked', async () => {

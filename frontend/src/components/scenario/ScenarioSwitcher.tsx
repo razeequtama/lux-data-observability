@@ -1,6 +1,7 @@
 import React from 'react';
 import { Database, RefreshCw, AlertCircle, CheckCircle2, FolderX } from 'lucide-react';
 import { FixtureVersion, ScenarioSummary } from '../../types';
+import { Language, translations } from '../../i18n/translations';
 
 interface ScenarioSwitcherProps {
   scenarios: ScenarioSummary[];
@@ -12,6 +13,7 @@ interface ScenarioSwitcherProps {
   onSelectFixtureVersion: (version: FixtureVersion) => void;
   onLoadScenario: (scenarioId: string, version: FixtureVersion) => void;
   onUnloadScenario?: (scenarioId: string) => void;
+  language?: Language;
 }
 
 export const ScenarioSwitcher: React.FC<ScenarioSwitcherProps> = ({
@@ -24,9 +26,11 @@ export const ScenarioSwitcher: React.FC<ScenarioSwitcherProps> = ({
   onSelectFixtureVersion,
   onLoadScenario,
   onUnloadScenario,
+  language = 'en',
 }) => {
   const activeScenario = scenarios.find((s) => s.id === activeScenarioId) || scenarios[0];
   const isBusy = isLoading || isUnloading;
+  const t = translations[language].scenario;
 
   return (
     <div
@@ -76,7 +80,7 @@ export const ScenarioSwitcher: React.FC<ScenarioSwitcherProps> = ({
           title="Corrupted fixture with introduced quality defects"
         >
           <AlertCircle className="w-3.5 h-3.5 text-rose-400" />
-          <span>Defective</span>
+          <span>{t.defective}</span>
         </button>
 
         <button
@@ -93,7 +97,7 @@ export const ScenarioSwitcher: React.FC<ScenarioSwitcherProps> = ({
           title="Clean recovered fixture with defects resolved"
         >
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Corrected</span>
+          <span>{t.corrected}</span>
         </button>
       </div>
 
@@ -106,7 +110,7 @@ export const ScenarioSwitcher: React.FC<ScenarioSwitcherProps> = ({
         className="flex items-center justify-center space-x-3 px-7 py-3 min-w-[155px] bg-gradient-to-r from-lux-700 via-lux-600 to-purple-600 hover:from-lux-600 hover:to-purple-500 active:from-lux-800 active:to-purple-700 disabled:opacity-50 text-white rounded-xl text-xs sm:text-sm font-bold shadow-[0_0_20px_rgba(124,58,237,0.4)] ring-1 ring-purple-400/50 transition-all cursor-pointer whitespace-nowrap"
       >
         <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-        <span>{isLoading ? 'Loading Fixtures...' : 'Load Scenario'}</span>
+        <span>{isLoading ? t.loading : t.load}</span>
       </button>
 
       {/* Trigger Unload Scenario Button */}
@@ -120,17 +124,8 @@ export const ScenarioSwitcher: React.FC<ScenarioSwitcherProps> = ({
           title="Unload scenario datasets and reset workspace"
         >
           <FolderX className={`w-4 h-4 text-rose-400 ${isUnloading ? 'animate-pulse' : ''}`} />
-          <span>{isUnloading ? 'Unloading...' : 'Unload Scenario'}</span>
+          <span>{isUnloading ? t.unloading : t.unload}</span>
         </button>
-      )}
-
-      {/* Dataset / Rule Counts pill */}
-      {activeScenario && (
-        <div className="hidden lg:flex items-center space-x-2 text-[11px] text-slate-400 pl-3 border-l border-white/[0.08]">
-          <span>{activeScenario.dataset_count} datasets</span>
-          <span className="text-slate-600">|</span>
-          <span>{activeScenario.rule_count} rules</span>
-        </div>
       )}
     </div>
   );

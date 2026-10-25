@@ -11,6 +11,9 @@ import { ImpactAnalysisView } from './components/impact';
 import { PipelineObservabilityView } from './components/pipeline';
 import { InvestigationWorkspace } from './components/reports';
 import { RecoveryDiffView } from './components/recovery';
+import { WelcomeModal } from './components/common/WelcomeModal';
+import { GuideModal } from './components/common/GuideModal';
+import { Language } from './i18n/translations';
 import {
   listScenarios,
   loadScenario,
@@ -35,7 +38,10 @@ export const App: React.FC = () => {
   const [scenarioReloadCounter, setScenarioReloadCounter] = useState(0);
 
   // UI state
-  const [isDatasetInspectorOpen, setIsDatasetInspectorOpen] = useState(true);
+  const [language, setLanguage] = useState<Language>('en');
+  const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState<boolean>(true);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState<boolean>(false);
+  const [isDatasetInspectorOpen, setIsDatasetInspectorOpen] = useState(false);
   const [previewingDataset, setPreviewingDataset] = useState<DatasetResponse | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isLoadingScenario, setIsLoadingScenario] = useState(false);
@@ -178,6 +184,9 @@ export const App: React.FC = () => {
         datasetsCount={datasets.length}
         isDatasetInspectorOpen={isDatasetInspectorOpen}
         onToggleDatasetInspector={() => setIsDatasetInspectorOpen((prev) => !prev)}
+        language={language}
+        onLanguageChange={setLanguage}
+        onOpenGuide={() => setIsGuideModalOpen(true)}
       />
 
       {/* Global Alert Banner */}
@@ -382,6 +391,22 @@ export const App: React.FC = () => {
         onClose={() => setIsUploadModalOpen(false)}
         activeScenarioId={activeScenarioId}
         onUploadSuccess={handleUploadSuccess}
+      />
+
+      {/* Welcome Modal: Shown first to every visitor */}
+      <WelcomeModal
+        isOpen={isWelcomeModalOpen}
+        onClose={() => setIsWelcomeModalOpen(false)}
+        language={language}
+        onLanguageChange={setLanguage}
+      />
+
+      {/* Guide Modal: Explains only how the tool works */}
+      <GuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+        language={language}
+        onLanguageChange={setLanguage}
       />
 
       {/* Footer */}
