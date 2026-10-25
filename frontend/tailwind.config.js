@@ -31,6 +31,7 @@ export default {
       },
       fontFamily: {
         sans: [
+          'Plus Jakarta Sans',
           'Inter',
           '-apple-system',
           'BlinkMacSystemFont',
@@ -55,4 +56,3 @@ export default {
   },
   plugins: [],
 };
-

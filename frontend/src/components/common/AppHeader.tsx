@@ -1,7 +1,5 @@
 import React from 'react';
 import {
-  CheckCircle2,
-  AlertTriangle,
   Upload,
   Database,
   BookOpen,
@@ -53,8 +51,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   onLanguageChange = () => {},
   onOpenGuide,
 }) => {
-  const activeScenario = scenarios.find((s) => s.id === activeScenarioId);
-  const scenarioDisplayName = activeScenario?.name || 'Monday Revenue Mystery';
   const activeTabDef = NAVIGATION_TABS.find((t) => t.id === activeTab) || NAVIGATION_TABS[0];
   const t = translations[language];
 
@@ -89,8 +85,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 
               <div className="relative z-10 flex flex-col justify-center space-y-1">
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs px-2.5 py-0.5 rounded-md font-mono font-bold bg-lux-950/90 text-purple-200 border border-lux-500/60 shadow-[0_0_12px_rgba(168,85,247,0.4)]">
-                    v0.1.0
+                  <span className="text-xs px-2.5 py-0.5 rounded-md font-sans font-bold bg-lux-950/90 text-purple-200 border border-lux-500/60 shadow-[0_0_12px_rgba(168,85,247,0.4)] tracking-wider">
+                    v1.0.0
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-300 font-bold tracking-wider uppercase whitespace-nowrap">
@@ -118,16 +114,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
               />
             </div>
 
-            {/* Bottom Row: Horizontally aligned controls (Datasets, Upload, Language toggle, Guide, Health) */}
+            {/* Bottom Row: Horizontally aligned controls (Datasets, Upload, Language toggle, Guide) */}
             <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-3.5">
-              {/* Active Scenario Badge */}
-              <div className="hidden xl:flex items-center space-x-2 px-3.5 py-2 rounded-xl bg-slate-950/70 border border-white/[0.08] text-xs font-mono text-slate-300 shadow-inner">
-                <span className="text-slate-500 font-medium">{t.header.scenario}</span>
-                <span data-testid="active-scenario" className="font-semibold text-purple-200">
-                  {scenarioDisplayName}
-                </span>
-              </div>
-
               {/* Dataset Inspector Drawer Toggle & Upload Buttons */}
               <div className="flex items-center space-x-2.5">
                 <button
@@ -143,7 +131,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 >
                   <Database className="w-4 h-4 text-lux-400 shrink-0" />
                   <span>{t.header.datasets}</span>
-                  <span className="px-2.5 py-0.5 rounded-full font-mono text-[11px] bg-slate-950 text-slate-200 border border-slate-700/80 ml-0.5">
+                  <span className="px-2.5 py-0.5 rounded-full font-sans font-bold text-[11px] bg-slate-950 text-slate-200 border border-slate-700/80 ml-0.5">
                     {datasetsCount}
                   </span>
                 </button>
@@ -179,50 +167,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   <span>{t.header.guide}</span>
                 </button>
               )}
-
-              {/* ADR-006 Dual Health Indicator: Compute vs Quality */}
-              <div
-                className="flex items-center space-x-3 px-4 py-2.5 rounded-xl bg-slate-950/70 border border-white/[0.08] text-xs shadow-inner shrink-0"
-                data-testid="dual-health-indicator"
-                aria-label="System Health Status"
-              >
-                {/* Compute Health Badge */}
-                <div
-                  className="flex items-center space-x-1.5"
-                  title="Pipeline Compute Health"
-                >
-                  <span className="text-slate-400 font-medium">{t.header.compute}</span>
-                  <span className="inline-flex items-center space-x-1 font-bold text-status-healthy">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-status-healthy" />
-                    <span>SUCCESS</span>
-                  </span>
-                </div>
-
-                <span className="text-white/20">|</span>
-
-                {/* Data Quality Health Badge */}
-                <div
-                  className="flex items-center space-x-1.5"
-                  title="Data Quality Health"
-                >
-                  <span className="text-slate-400 font-medium">{t.header.quality}</span>
-                  {datasetsCount === 0 ? (
-                    <span className="inline-flex items-center space-x-1 font-bold text-slate-400">
-                      <span>NOT LOADED</span>
-                    </span>
-                  ) : activeFixtureVersion === 'corrected' ? (
-                    <span className="inline-flex items-center space-x-1 font-bold text-status-healthy">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-status-healthy" />
-                      <span>HEALTHY</span>
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center space-x-1 font-bold text-status-corrupted">
-                      <AlertTriangle className="w-3.5 h-3.5 text-status-corrupted" />
-                      <span>CORRUPTED</span>
-                    </span>
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         </div>

@@ -45,7 +45,7 @@ export const DatasetInspector: React.FC<DatasetInspectorProps> = ({
           <div className="space-y-1">
             <h3 className="text-base font-bold text-white tracking-tight flex items-center space-x-2.5">
               <span>Ingested Scenario Datasets</span>
-              <span className="text-xs px-3 py-0.5 rounded-full font-mono font-semibold bg-slate-900 text-purple-200 border border-white/[0.08] shadow-inner">
+              <span className="text-xs px-3 py-0.5 rounded-full font-sans font-semibold bg-slate-900 text-purple-200 border border-white/[0.08] shadow-inner">
                 {datasets.length} files
               </span>
             </h3>
@@ -116,7 +116,7 @@ export const DatasetInspector: React.FC<DatasetInspectorProps> = ({
               <th className="py-3.5 px-5 font-semibold tracking-wider uppercase text-[11px] text-center w-32">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.05] font-mono text-slate-300">
+          <tbody className="divide-y divide-white/[0.05] font-sans text-slate-300">
             {isLoading ? (
               <tr>
                 <td colSpan={6} className="py-16 text-center text-slate-400 font-sans">
@@ -148,10 +148,10 @@ export const DatasetInspector: React.FC<DatasetInspectorProps> = ({
                         <FileSpreadsheet className="w-4 h-4" />
                       </div>
                       <div>
-                        <span className="font-semibold text-white font-mono text-xs">
+                        <span className="font-semibold text-white font-sans text-xs">
                           {dataset.name}
                         </span>
-                        <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                        <div className="text-[11px] text-slate-400 font-sans mt-0.5">
                           id: {dataset.id}
                         </div>
                       </div>

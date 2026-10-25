@@ -82,7 +82,7 @@ export const GuideModal: React.FC<GuideModalProps> = ({
               className="bg-slate-950/70 border border-white/[0.08] hover:border-purple-400/40 rounded-2xl p-4 sm:p-5 space-y-2.5 transition-all shadow-sm"
             >
               <div className="flex items-center space-x-3">
-                <span className="w-6 h-6 rounded-lg bg-lux-950 border border-lux-600/50 text-purple-300 text-xs font-mono font-bold flex items-center justify-center shrink-0">
+                <span className="w-6 h-6 rounded-lg bg-lux-950 border border-lux-600/50 text-purple-300 text-xs font-sans font-bold flex items-center justify-center shrink-0">
                   {s.number}
                 </span>
                 <h3 className="text-xs sm:text-sm font-bold text-white tracking-tight">

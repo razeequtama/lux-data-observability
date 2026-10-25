@@ -131,6 +131,11 @@ export const App: React.FC = () => {
     setAlert(null);
     try {
       const res = await unloadScenario(scenarioId);
+      // Immediately clear all scenario and dataset selections to reset workspace state
+      setDatasets([]);
+      setSelectedFindingForImpact(null);
+      setSelectedLineageNodeId(null);
+      setPreviewingDataset(null);
       setScenarioReloadCounter((prev) => prev + 1);
       setAlert({
         type: 'info',
@@ -289,6 +294,7 @@ export const App: React.FC = () => {
           ) : activeTab === 'pipelines' ? (
             <PipelineObservabilityView
               scenarioId={activeScenarioId}
+              isScenarioLoaded={datasets.length > 0}
               lastReloadKey={scenarioReloadCounter}
               onTraceImpact={() => {
                 setSelectedLineageNodeId('src_orders');
@@ -305,6 +311,7 @@ export const App: React.FC = () => {
           ) : activeTab === 'investigation' ? (
             <InvestigationWorkspace
               scenarioId={activeScenarioId}
+              isScenarioLoaded={datasets.length > 0}
               lastReloadKey={scenarioReloadCounter}
               onNavigateToLineage={(nodeId) => {
                 setSelectedLineageNodeId(nodeId || null);
@@ -317,6 +324,8 @@ export const App: React.FC = () => {
           ) : activeTab === 'recovery' ? (
             <RecoveryDiffView
               scenarioId={activeScenarioId}
+              isScenarioLoaded={datasets.length > 0}
+              lastReloadKey={scenarioReloadCounter}
               onNavigateToLineage={() => {
                 setActiveTab('lineage');
                 setSelectedFindingForImpact(null);
@@ -415,7 +424,7 @@ export const App: React.FC = () => {
           <div className="flex items-center space-x-2">
             <span className="text-slate-300 font-medium">Lux Data Observability Platform</span>
             <span className="text-slate-600">|</span>
-            <span className="text-lux-400 font-mono font-semibold">v0.1.0</span>
+            <span className="text-lux-400 font-sans font-semibold tracking-wide">v1.0.0</span>
           </div>
           <div className="flex items-center space-x-2 text-slate-400">
             <span>Deterministic Quality Engine & Dependency Lineage</span>

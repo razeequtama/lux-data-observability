@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   RefreshCw,
   Loader2,
@@ -18,6 +18,8 @@ import { AlertBanner } from '../common/AlertBanner';
 
 export interface RecoveryDiffViewProps {
   scenarioId: string;
+  isScenarioLoaded?: boolean;
+  lastReloadKey?: number | string;
   initialComparison?: RecoveryComparison | null;
   onNavigateToLineage?: () => void;
   onNavigateToValidations?: () => void;
@@ -26,6 +28,8 @@ export interface RecoveryDiffViewProps {
 
 export const RecoveryDiffView: React.FC<RecoveryDiffViewProps> = ({
   scenarioId,
+  isScenarioLoaded = true,
+  lastReloadKey,
   initialComparison = null,
   onNavigateToLineage,
   onNavigateToValidations,
@@ -36,7 +40,19 @@ export const RecoveryDiffView: React.FC<RecoveryDiffViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [lastVerifiedAt, setLastVerifiedAt] = useState<Date | null>(null);
 
+  useEffect(() => {
+    if (isScenarioLoaded === false) {
+      setComparison(null);
+      setError(null);
+      setLastVerifiedAt(null);
+      setIsVerifying(false);
+    }
+  }, [isScenarioLoaded, lastReloadKey]);
+
   const handleVerify = async () => {
+    if (isScenarioLoaded === false) {
+      return;
+    }
     setIsVerifying(true);
     setError(null);
 

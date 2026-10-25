@@ -83,42 +83,146 @@ export const ImpactAnalysisView: React.FC<ImpactAnalysisViewProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchBlastRadius = useCallback(async (targetId: string) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const report = await traceDownstreamImpact({
-        scenario_id: scenarioId,
-        target_type: 'NODE',
-        target_id: targetId,
-        include_transformations: true,
-        include_root: true,
-      });
-      setBlastRadius(report);
-    } catch (err) {
-      console.warn('Could not fetch blast radius:', err);
-      setError(err instanceof Error ? err.message : 'Failed to trace blast radius.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [scenarioId]);
+  const fetchBlastRadius = useCallback(
+    async (targetId: string) => {
+      if (!isScenarioLoaded) {
+        setBlastRadius(null);
+        setError(null);
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
+      try {
+        const report = await traceDownstreamImpact({
+          scenario_id: scenarioId,
+          target_type: 'NODE',
+          target_id: targetId,
+          include_transformations: true,
+          include_root: true,
+        });
+        if (isScenarioLoaded) {
+          setBlastRadius(report);
+        }
+      } catch (err) {
+        if (isScenarioLoaded) {
+          console.warn('Could not fetch blast radius:', err);
+          setError(err instanceof Error ? err.message : 'Failed to trace blast radius.');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [scenarioId, isScenarioLoaded]
+  );
 
   useEffect(() => {
+    let isCancelled = false;
+
+    if (!isScenarioLoaded) {
+      setBlastRadius(null);
+      setError(null);
+      setIsLoading(false);
+      setSelectedTargetId('src_orders');
+      return;
+    }
+
+    const runFetch = async (targetId: string) => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const report = await traceDownstreamImpact({
+          scenario_id: scenarioId,
+          target_type: 'NODE',
+          target_id: targetId,
+          include_transformations: true,
+          include_root: true,
+        });
+        if (!isCancelled) {
+          setBlastRadius(report);
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          console.warn('Could not fetch blast radius:', err);
+          setError(err instanceof Error ? err.message : 'Failed to trace blast radius.');
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
     if (initialTargetFinding) {
       const targetId = `src_${initialTargetFinding.dataset_id}`;
       setSelectedTargetId(targetId);
-      fetchBlastRadius(targetId);
+      runFetch(targetId);
     } else if (initialTargetNodeId) {
       setSelectedTargetId(initialTargetNodeId);
-      fetchBlastRadius(initialTargetNodeId);
+      runFetch(initialTargetNodeId);
     } else {
-      fetchBlastRadius(selectedTargetId);
+      runFetch(selectedTargetId);
     }
-  }, [fetchBlastRadius, initialTargetFinding, initialTargetNodeId, lastReloadKey, selectedTargetId]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [
+    scenarioId,
+    initialTargetFinding,
+    initialTargetNodeId,
+    isScenarioLoaded,
+    lastReloadKey,
+    selectedTargetId,
+  ]);
 
   const handleSelectTarget = (newTargetId: string) => {
     setSelectedTargetId(newTargetId);
   };
+
+  if (!isScenarioLoaded) {
+    return (
+      <div className="space-y-6" data-testid="impact-analysis-view">
+        {/* Action Header Banner */}
+        <div className="relative overflow-hidden bg-[#0d0f1b]/90 backdrop-blur-xl border border-white/[0.08] border-t-purple-400/30 rounded-3xl p-6 sm:p-7 shadow-xl shadow-black/40 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div className="space-y-1.5 relative z-10">
+            <div className="flex items-center space-x-3">
+              <div className="p-2.5 rounded-2xl bg-lux-950/80 border border-lux-700/50 text-lux-400 shadow-[0_0_16px_rgba(168,85,247,0.35)]">
+                <Target className="w-5 h-5" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                Downstream Impact & Blast Radius Analysis
+              </h2>
+              <span className="text-xs px-3.5 py-1 rounded-xl font-sans font-semibold bg-slate-900/90 text-purple-200 border border-white/[0.08] shadow-inner">
+                scenario: {scenarioId}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-400">
+              Traverses lineage dependencies to isolate affected downstream models, calculate blast radius, and protect executive assets.
+            </p>
+          </div>
+        </div>
+
+        {/* Empty State Banner when no scenario is loaded */}
+        <div
+          data-testid="impact-empty-state"
+          className="relative overflow-hidden bg-[#0d0f1b]/60 backdrop-blur-xl border border-white/[0.07] border-t-purple-400/20 rounded-3xl p-16 text-center space-y-6 shadow-xl"
+        >
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-lux-950/80 border border-lux-700/50 flex items-center justify-center text-lux-400 shadow-[0_0_24px_rgba(168,85,247,0.4)]">
+            <Target className="w-8 h-8" />
+          </div>
+          <div className="max-w-md mx-auto space-y-2.5">
+            <h3 className="text-lg font-bold text-white tracking-tight">
+              No Scenario Loaded Yet
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              Click &quot;Load Scenario&quot; in the top command bar to ingest datasets into the workspace before tracing downstream impact and blast radius.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6" data-testid="impact-analysis-view">
@@ -144,7 +248,7 @@ export const ImpactAnalysisView: React.FC<ImpactAnalysisViewProps> = ({
             <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
               Downstream Impact & Blast Radius Analysis
             </h2>
-            <span className="text-xs px-3.5 py-1 rounded-xl font-mono font-semibold bg-slate-900/90 text-purple-200 border border-white/[0.08] shadow-inner">
+            <span className="text-xs px-3.5 py-1 rounded-xl font-sans font-semibold bg-slate-900/90 text-purple-200 border border-white/[0.08] shadow-inner">
               scenario: {scenarioId}
             </span>
           </div>

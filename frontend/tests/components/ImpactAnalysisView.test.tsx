@@ -157,5 +157,43 @@ describe('ImpactAnalysisView Component', () => {
       expect(screen.getByText('Failed to resolve graph cycle')).toBeInTheDocument();
     });
   });
+
+  it('displays empty state and skips blast radius tracing when isScenarioLoaded is false', async () => {
+    render(
+      <ImpactAnalysisView
+        scenarioId="monday_revenue_mystery"
+        isScenarioLoaded={false}
+      />
+    );
+
+    expect(screen.getByTestId('impact-empty-state')).toBeInTheDocument();
+    expect(screen.getByText('No Scenario Loaded Yet')).toBeInTheDocument();
+    expect(lineageApi.traceDownstreamImpact).not.toHaveBeenCalled();
+  });
+
+  it('resets blast radius and renders empty state when isScenarioLoaded changes to false', async () => {
+    const { rerender } = render(
+      <ImpactAnalysisView
+        scenarioId="monday_revenue_mystery"
+        isScenarioLoaded={true}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('impact-summary-metrics')).toBeInTheDocument();
+    });
+
+    rerender(
+      <ImpactAnalysisView
+        scenarioId="monday_revenue_mystery"
+        isScenarioLoaded={false}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('impact-empty-state')).toBeInTheDocument();
+      expect(screen.queryByTestId('impact-summary-metrics')).not.toBeInTheDocument();
+    });
+  });
 });
 

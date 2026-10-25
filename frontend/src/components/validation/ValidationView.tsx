@@ -108,8 +108,15 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
   };
 
   useEffect(() => {
+    if (availableDatasets && availableDatasets.length === 0) {
+      setCurrentRun(null);
+      setFindings([]);
+      setSelectedFinding(null);
+      setIsDrawerOpen(false);
+      return;
+    }
     fetchLatestRun(scenarioId);
-  }, [fetchLatestRun, scenarioId, fixtureVersion, lastReloadKey]);
+  }, [fetchLatestRun, scenarioId, fixtureVersion, lastReloadKey, availableDatasets]);
 
   const handleSelectFinding = (finding: ValidationFindingItem) => {
     setSelectedFinding(finding);
@@ -135,7 +142,7 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
             <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
               Deterministic Quality Engine
             </h2>
-            <span className="text-xs px-3.5 py-1 rounded-xl font-mono font-semibold bg-slate-900/90 text-purple-200 border border-white/[0.08] shadow-inner">
+            <span className="text-xs px-3.5 py-1 rounded-xl font-sans font-semibold bg-slate-900/90 text-purple-200 border border-white/[0.08] shadow-inner">
               scenario: {scenarioId}
             </span>
           </div>
@@ -144,8 +151,8 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center space-x-3 w-full sm:w-auto relative z-10">
-          {currentRun && (
+        {currentRun && (
+          <div className="flex items-center space-x-3 w-full sm:w-auto relative z-10">
             <button
               type="button"
               onClick={() => fetchLatestRun(scenarioId)}
@@ -157,28 +164,28 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
             >
               <RotateCw className={`w-4.5 h-4.5 ${isLoadingRun ? 'animate-spin' : ''}`} />
             </button>
-          )}
 
-          <button
-            type="button"
-            onClick={handleExecuteValidationRun}
-            disabled={isRunningValidation || isLoadingRun}
-            data-testid="execute-validations-btn"
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-2.5 px-7 py-3 bg-gradient-to-r from-lux-700 via-lux-600 to-indigo-600 hover:from-lux-600 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-[0_0_22px_rgba(124,58,237,0.4)] ring-1 ring-purple-400/50 cursor-pointer"
-          >
-            {isRunningValidation ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Evaluating Rules...</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 fill-current" />
-                <span>{currentRun ? 'Re-run Quality Validations' : 'Execute Quality Validations'}</span>
-              </>
-            )}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={handleExecuteValidationRun}
+              disabled={isRunningValidation || isLoadingRun}
+              data-testid="re-run-validations-btn"
+              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2.5 px-7 py-3 bg-gradient-to-r from-lux-700 via-lux-600 to-indigo-600 hover:from-lux-600 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-[0_0_22px_rgba(124,58,237,0.4)] ring-1 ring-purple-400/50 cursor-pointer"
+            >
+              {isRunningValidation ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Evaluating Rules...</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>Re-run Quality Validations</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Error Alert */}
@@ -209,14 +216,14 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
               {availableDatasets && availableDatasets.length === 0
                 ? 'Click "Load Scenario" in the top bar to ingest datasets into the workspace before executing validations.'
-                : `Click "Execute Quality Validations" to evaluate deterministic rules against the active scenario datasets (${availableDatasets?.length || 4} files) and inspect structured row findings.`}
+                : `Click "Execute Validations Now" to evaluate deterministic rules against the active scenario datasets (${availableDatasets?.length || 4} files) and inspect structured row findings.`}
             </p>
           </div>
           {(!availableDatasets || availableDatasets.length > 0) && (
             <button
               type="button"
               onClick={handleExecuteValidationRun}
-              data-testid="empty-state-run-btn"
+              data-testid="execute-validations-btn"
               className="inline-flex items-center space-x-2.5 px-8 py-3.5 bg-gradient-to-r from-lux-700 via-lux-600 to-indigo-600 hover:from-lux-600 hover:to-indigo-500 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-[0_0_24px_rgba(124,58,237,0.45)] ring-1 ring-purple-400/50 cursor-pointer"
             >
               <Play className="w-4 h-4 fill-current" />

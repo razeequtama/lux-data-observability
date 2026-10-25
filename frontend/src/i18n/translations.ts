@@ -174,7 +174,7 @@ export const translations: Record<Language, Translations> = {
         {
           number: '2',
           title: 'Step 2: Run Validations',
-          desc: 'Open the Validations workspace and click "Execute Quality Validations". Lux evaluates structural, uniqueness, referential integrity, range, and temporal rules against active datasets. Click any finding row to open the Evidence Drawer and inspect violating rows.',
+          desc: 'Open the Validations workspace and click "Execute Validations Now". Lux evaluates structural, uniqueness, referential integrity, range, and temporal rules against active datasets. Click any finding row to open the Evidence Drawer and inspect violating rows.',
           actionTip: 'Filter by CRITICAL or HIGH severity to isolate primary blockers.',
         },
         {

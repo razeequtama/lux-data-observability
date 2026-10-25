@@ -91,25 +91,14 @@ describe('Lux App Shell Component', () => {
     expect(screen.getByText('Lux')).toBeInTheDocument();
     expect(screen.getByText('Data Observability Platform')).toBeInTheDocument();
     expect(screen.getByTestId('lux-logo')).toBeInTheDocument();
+    expect(screen.getAllByText('v1.0.0').length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders the active signature scenario badge', async () => {
+  it('verifies top header labels for scenario and dual health are omitted per user specification', async () => {
     await renderApp();
 
-    const scenarioBadge = screen.getByTestId('active-scenario');
-    expect(scenarioBadge).toBeInTheDocument();
-    expect(scenarioBadge).toHaveTextContent('Monday Revenue Mystery');
-  });
-
-  it('renders dual-dimension health indicators separating compute and quality', async () => {
-    await renderApp();
-
-    const indicator = screen.getByTestId('dual-health-indicator');
-    expect(indicator).toBeInTheDocument();
-    expect(indicator).toHaveTextContent('Compute:');
-    expect(indicator).toHaveTextContent('SUCCESS');
-    expect(indicator).toHaveTextContent('Quality:');
-    expect(indicator).toHaveTextContent('CORRUPTED');
+    expect(screen.queryByTestId('active-scenario')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('dual-health-indicator')).not.toBeInTheDocument();
   });
 
   it('renders all semantic navigation tabs with accessible ARIA roles', async () => {

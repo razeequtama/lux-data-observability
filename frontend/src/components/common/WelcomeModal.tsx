@@ -57,8 +57,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 >
                   {t.welcome.title}
                 </h2>
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-lux-950 text-purple-200 border border-lux-600/50">
-                  v0.1.0
+                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-sans font-bold bg-lux-950 text-purple-200 border border-lux-600/50 tracking-wider">
+                  v1.0.0
                 </span>
               </div>
               <p className="text-xs text-purple-300 font-medium line-clamp-1">
@@ -191,7 +191,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                   key={idx}
                   className="flex items-start space-x-3.5 bg-slate-950/60 border border-white/[0.06] rounded-2xl p-3.5"
                 >
-                  <span className="shrink-0 px-2 py-0.5 rounded-lg font-mono text-[11px] font-bold bg-lux-950 text-purple-300 border border-lux-600/40 mt-0.5">
+                  <span className="shrink-0 px-2 py-0.5 rounded-lg font-sans text-[11px] font-bold bg-lux-950 text-purple-300 border border-lux-600/40 mt-0.5">
                     {item.step}
                   </span>
                   <div className="space-y-0.5">

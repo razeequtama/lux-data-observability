@@ -13,6 +13,7 @@ import { FreshnessView } from './FreshnessView';
 
 interface PipelineObservabilityViewProps {
   scenarioId: string;
+  isScenarioLoaded?: boolean;
   lastReloadKey?: number | string;
   onTraceImpact?: () => void;
 }
@@ -21,6 +22,7 @@ export type PipelineViewSubTab = 'history' | 'freshness' | 'combined';
 
 export const PipelineObservabilityView: React.FC<PipelineObservabilityViewProps> = ({
   scenarioId,
+  isScenarioLoaded = true,
   lastReloadKey,
   onTraceImpact,
 }) => {
@@ -31,6 +33,13 @@ export const PipelineObservabilityView: React.FC<PipelineObservabilityViewProps>
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (isScenarioLoaded === false) {
+      setRuns([]);
+      setFreshnessChecks([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -50,11 +59,18 @@ export const PipelineObservabilityView: React.FC<PipelineObservabilityViewProps>
     } finally {
       setIsLoading(false);
     }
-  }, [scenarioId]);
+  }, [scenarioId, isScenarioLoaded]);
 
   useEffect(() => {
+    if (isScenarioLoaded === false) {
+      setRuns([]);
+      setFreshnessChecks([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
     fetchData();
-  }, [fetchData, lastReloadKey]);
+  }, [fetchData, lastReloadKey, isScenarioLoaded]);
 
   // Find any run exhibiting the dual-dimension anomaly (compute SUCCESS but quality CORRUPTED)
   const anomalousRun = runs.find(

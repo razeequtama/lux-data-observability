@@ -26,6 +26,7 @@ import { ReportModal } from './ReportModal';
 
 export interface InvestigationWorkspaceProps {
   scenarioId: string;
+  isScenarioLoaded?: boolean;
   lastReloadKey?: number | string;
   onNavigateToLineage?: (nodeId?: string) => void;
   onNavigateToValidations?: () => void;
@@ -33,6 +34,7 @@ export interface InvestigationWorkspaceProps {
 
 export const InvestigationWorkspace: React.FC<InvestigationWorkspaceProps> = ({
   scenarioId,
+  isScenarioLoaded = true,
   lastReloadKey,
   onNavigateToLineage,
   onNavigateToValidations,
@@ -60,8 +62,24 @@ export const InvestigationWorkspace: React.FC<InvestigationWorkspaceProps> = ({
   // Report modal state
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
+  const resetWorkspaceState = useCallback(() => {
+    setInvestigations([]);
+    setActiveInvestigation(null);
+    setTitle('');
+    setStatus('INVESTIGATING');
+    setVerifiedFacts([]);
+    setHypotheses([]);
+    setActionItems([]);
+    setError(null);
+    setIsLoading(false);
+  }, []);
+
   const fetchInvestigations = useCallback(
     async (preferSynthesizeIfEmpty = false) => {
+      if (isScenarioLoaded === false) {
+        resetWorkspaceState();
+        return;
+      }
       setIsLoading(true);
       setError(null);
       try {
@@ -87,6 +105,11 @@ export const InvestigationWorkspace: React.FC<InvestigationWorkspaceProps> = ({
           setActionItems(synthesized.action_items || []);
         } else {
           setActiveInvestigation(null);
+          setTitle('');
+          setStatus('INVESTIGATING');
+          setVerifiedFacts([]);
+          setHypotheses([]);
+          setActionItems([]);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch investigations.');
@@ -94,12 +117,16 @@ export const InvestigationWorkspace: React.FC<InvestigationWorkspaceProps> = ({
         setIsLoading(false);
       }
     },
-    [scenarioId]
+    [scenarioId, isScenarioLoaded, resetWorkspaceState]
   );
 
   useEffect(() => {
+    if (isScenarioLoaded === false) {
+      resetWorkspaceState();
+      return;
+    }
     fetchInvestigations(false);
-  }, [fetchInvestigations, lastReloadKey]);
+  }, [fetchInvestigations, lastReloadKey, isScenarioLoaded, resetWorkspaceState]);
 
   const handleSynthesize = async () => {
     setIsSynthesizing(true);
