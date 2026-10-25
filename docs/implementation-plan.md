@@ -580,6 +580,7 @@ A task is **Done** only when:
 ---
 
 ### Task T24: Docker Compose Orchestration, Production Build & Operational Documentation
+- **Status:** COMPLETED
 - **Objective:** Finalize containerization with Docker Compose, verify production builds, and update operational documentation.
 - **Prerequisites:** `T23`.
 - **In-Scope:**

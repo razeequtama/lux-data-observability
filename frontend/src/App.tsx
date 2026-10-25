@@ -209,20 +209,18 @@ export const App: React.FC = () => {
           aria-labelledby={`tab-${activeTab}`}
           className="space-y-6"
         >
-          {/* Active Section Banner */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <h1 className="text-xl font-bold text-white tracking-tight flex items-center space-x-2">
-                  <span>{activeTabDef.label}</span>
-                </h1>
-                <p className="text-sm text-slate-400 mt-1">{activeTabDef.description}</p>
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-400">
-                  Tab: {activeTabDef.id}
-                </span>
-              </div>
+          {/* Active Section Header */}
+          <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl px-5 py-3.5 shadow-sm flex items-center justify-between">
+            <div>
+              <h1 className="text-base font-bold text-white tracking-tight flex items-center space-x-2">
+                <span>{activeTabDef.label}</span>
+              </h1>
+              <p className="text-xs text-slate-400 mt-0.5">{activeTabDef.description}</p>
+            </div>
+            <div className="hidden sm:flex items-center space-x-2">
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400">
+                Step {NAVIGATION_TABS.findIndex((t) => t.id === activeTab) + 1} of {NAVIGATION_TABS.length}
+              </span>
             </div>
           </div>
 
@@ -246,6 +244,7 @@ export const App: React.FC = () => {
           ) : activeTab === 'lineage' || activeTab === 'impact' ? (
             <LineageView
               scenarioId={activeScenarioId}
+              isScenarioLoaded={datasets.length > 0}
               lastReloadKey={scenarioReloadCounter}
               initialSelectedNodeId={selectedLineageNodeId}
               initialTargetFinding={selectedFindingForImpact}

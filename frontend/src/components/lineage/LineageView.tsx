@@ -38,6 +38,7 @@ import {
 
 export interface LineageViewProps {
   scenarioId?: string;
+  isScenarioLoaded?: boolean;
   lastReloadKey?: number | string;
   initialSelectedNodeId?: string | null;
   initialTargetFinding?: {
@@ -60,6 +61,7 @@ const nodeTypes: NodeTypes = {
 
 export const LineageView: React.FC<LineageViewProps> = ({
   scenarioId = 'monday_revenue_mystery',
+  isScenarioLoaded,
   lastReloadKey,
   initialSelectedNodeId = null,
   initialTargetFinding = null,
@@ -140,8 +142,14 @@ export const LineageView: React.FC<LineageViewProps> = ({
   }, [scenarioId, setNodes, setEdges]);
 
   useEffect(() => {
+    if (isScenarioLoaded === false) {
+      setNodes([]);
+      setEdges([]);
+      setIsLoading(false);
+      return;
+    }
     loadGraph();
-  }, [loadGraph, lastReloadKey]);
+  }, [loadGraph, lastReloadKey, isScenarioLoaded, setEdges, setNodes]);
 
   // Execute blast radius trace and highlight downstream paths
   const selectAndTraceNode = useCallback(
@@ -351,6 +359,25 @@ export const LineageView: React.FC<LineageViewProps> = ({
         return '#64748B';
     }
   }, []);
+
+  if (isScenarioLoaded === false) {
+    return (
+      <div
+        data-testid="lineage-empty"
+        className="w-full h-[450px] bg-slate-900/60 border border-slate-800 rounded-2xl p-12 flex flex-col items-center justify-center text-center space-y-4"
+      >
+        <div className="w-12 h-12 rounded-full bg-lux-950 border border-lux-700/50 flex items-center justify-center text-lux-400">
+          <Info className="w-6 h-6" />
+        </div>
+        <div className="max-w-md mx-auto space-y-2">
+          <h3 className="text-base font-bold text-white">No Lineage Graph Loaded Yet</h3>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Click &quot;Load Scenario&quot; in the header above to load scenario datasets and render the interactive Directed Acyclic Graph (DAG).
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

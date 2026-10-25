@@ -198,21 +198,28 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
             <ShieldCheck className="w-6 h-6" />
           </div>
           <div className="max-w-md mx-auto space-y-2">
-            <h3 className="text-base font-bold text-white">No Validation Runs Executed Yet</h3>
+            <h3 className="text-base font-bold text-white">
+              {availableDatasets && availableDatasets.length === 0
+                ? 'No Scenario Loaded Yet'
+                : 'No Validation Runs Executed Yet'}
+            </h3>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Click &quot;Execute Quality Validations&quot; to evaluate deterministic rules against the
-              active scenario datasets ({availableDatasets?.length || 4} files) and inspect structured row findings.
+              {availableDatasets && availableDatasets.length === 0
+                ? 'Click "Load Scenario" in the top bar to ingest datasets into the workspace before executing validations.'
+                : `Click "Execute Quality Validations" to evaluate deterministic rules against the active scenario datasets (${availableDatasets?.length || 4} files) and inspect structured row findings.`}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleExecuteValidationRun}
-            data-testid="empty-state-run-btn"
-            className="inline-flex items-center space-x-2 px-4 py-2 bg-lux-700 hover:bg-lux-600 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-            <span>Execute Validations Now</span>
-          </button>
+          {(!availableDatasets || availableDatasets.length > 0) && (
+            <button
+              type="button"
+              onClick={handleExecuteValidationRun}
+              data-testid="empty-state-run-btn"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-lux-700 hover:bg-lux-600 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>Execute Validations Now</span>
+            </button>
+          )}
         </div>
       ) : (
         <>

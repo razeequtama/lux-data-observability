@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Layers,
   CheckCircle2,
   AlertTriangle,
   Upload,
@@ -56,20 +55,24 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
           {/* Left: Logo & Branding */}
           <div className="flex items-center space-x-3">
             <div
-              className="w-10 h-10 rounded-lg bg-lux-700 flex items-center justify-center shadow-lg shadow-lux-700/20 text-white shrink-0"
+              className="flex items-center space-x-2.5 shrink-0"
               data-testid="lux-logo"
               aria-label="Lux Data Observability Logo"
             >
-              <Layers className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-lg text-white tracking-tight">Lux</span>
-                <span className="text-xs px-2 py-0.5 rounded font-mono font-medium bg-lux-900/80 text-lux-200 border border-lux-700/50">
-                  v0.1.0
-                </span>
+              <img
+                src="/logo_and_title.svg"
+                alt="Lux Logo"
+                className="h-9 w-auto object-contain rounded"
+              />
+              <div className="flex flex-col">
+                <div className="flex items-center space-x-2">
+                  <span className="font-bold text-lg text-white tracking-tight">Lux</span>
+                  <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-medium bg-lux-950 text-lux-300 border border-lux-700/50">
+                    v0.1.0
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-medium">Data Observability Platform</p>
               </div>
-              <p className="text-xs text-slate-400">Data Observability Platform</p>
             </div>
           </div>
 
@@ -152,7 +155,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                 title="Data Quality Health"
               >
                 <span className="text-slate-400">Quality:</span>
-                {activeFixtureVersion === 'corrected' ? (
+                {datasetsCount === 0 ? (
+                  <span className="inline-flex items-center space-x-1 font-semibold text-slate-400">
+                    <span>NOT LOADED</span>
+                  </span>
+                ) : activeFixtureVersion === 'corrected' ? (
                   <span className="inline-flex items-center space-x-1 font-semibold text-status-healthy">
                     <CheckCircle2 className="w-3.5 h-3.5 text-status-healthy" />
                     <span>HEALTHY</span>
@@ -169,20 +176,21 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         </div>
       </div>
 
-      {/* Semantic Navigation Tabs */}
+      {/* Semantic Navigation Stepper Bar */}
       <nav
-        className="border-t border-slate-800/70 bg-slate-900/60"
+        className="border-t border-slate-800/80 bg-slate-950/70 backdrop-blur"
         aria-label="Observability Workspaces"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
-            className="flex space-x-1 overflow-x-auto py-2 scrollbar-none"
+            className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-2 scrollbar-none"
             role="tablist"
             aria-label="Observability Workspaces"
           >
-            {NAVIGATION_TABS.map((tab) => {
+            {NAVIGATION_TABS.map((tab, idx) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
+              const stepNumber = idx + 1;
               return (
                 <button
                   key={tab.id}
@@ -191,13 +199,22 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
                   aria-controls={`panel-${tab.id}`}
                   aria-selected={isActive}
                   onClick={() => onTabChange(tab.id)}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap cursor-pointer ${
+                  className={`group relative flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap cursor-pointer ${
                     isActive
-                      ? 'bg-lux-700 text-white shadow-sm shadow-lux-700/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      ? 'bg-lux-700 text-white shadow-sm shadow-lux-700/40 ring-1 ring-lux-400/40'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/70'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <span
+                    className={`px-1.5 h-4 rounded text-[9px] tracking-tight flex items-center justify-center font-mono font-bold transition-colors ${
+                      isActive
+                        ? 'bg-white/25 text-white ring-1 ring-white/30'
+                        : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700 group-hover:text-slate-300'
+                    }`}
+                  >
+                    0{stepNumber}
+                  </span>
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`} />
                   <span>{tab.label}</span>
                 </button>
               );
