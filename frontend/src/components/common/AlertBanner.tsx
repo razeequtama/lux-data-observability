@@ -53,13 +53,13 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
   return (
     <div
       role="alert"
-      className={`flex items-start justify-between p-4 border rounded-lg backdrop-blur text-sm ${style.container} ${className}`}
+      className={`flex items-start justify-between p-5 sm:p-6 border rounded-2xl backdrop-blur-xl text-sm shadow-lg ${style.container} ${className}`}
     >
-      <div className="flex items-start space-x-3">
+      <div className="flex items-start space-x-3.5">
         {style.icon}
-        <div>
-          <p className={`font-semibold ${style.title}`}>{message}</p>
-          {details && <p className="text-xs opacity-90 mt-1 font-mono break-all">{details}</p>}
+        <div className="space-y-1">
+          <p className={`font-bold ${style.title}`}>{message}</p>
+          {details && <p className="text-xs opacity-90 mt-1 font-mono break-all leading-relaxed">{details}</p>}
         </div>
       </div>
       {onClose && (
@@ -67,9 +67,9 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
           type="button"
           onClick={onClose}
           aria-label="Dismiss alert"
-          className="ml-3 p-1 rounded hover:bg-slate-800/60 text-slate-400 hover:text-white transition-colors"
+          className="ml-4 p-1.5 rounded-lg hover:bg-slate-800/60 text-slate-400 hover:text-white transition-colors cursor-pointer"
         >
-          <X className="w-4 h-4" />
+          <X className="w-4.5 h-4.5" />
         </button>
       )}
     </div>

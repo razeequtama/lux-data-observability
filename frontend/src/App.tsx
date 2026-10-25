@@ -7,6 +7,7 @@ import { DatasetPreviewModal } from './components/dataset/DatasetPreviewModal';
 import { UploadModal } from './components/dataset/UploadModal';
 import { ValidationView } from './components/validation/ValidationView';
 import { LineageView } from './components/lineage/LineageView';
+import { ImpactAnalysisView } from './components/impact';
 import { PipelineObservabilityView } from './components/pipeline';
 import { InvestigationWorkspace } from './components/reports';
 import { RecoveryDiffView } from './components/recovery';
@@ -153,7 +154,13 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-lux-700 selection:text-white">
+    <div className="min-h-screen bg-[#07080D] text-slate-100 flex flex-col font-sans relative selection:bg-purple-500/30 selection:text-purple-200 overflow-x-hidden">
+      {/* Luminous Top Aurora / Light Cone */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[450px] bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(139,92,246,0.18),rgba(99,102,241,0.06),transparent_70%)] pointer-events-none z-0"
+        aria-hidden="true"
+      />
+
       {/* Top Navigation Shell */}
       <AppHeader
         activeTab={activeTab}
@@ -175,7 +182,7 @@ export const App: React.FC = () => {
 
       {/* Global Alert Banner */}
       {alert && (
-        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div className="w-full px-6 sm:px-8 lg:px-10 pt-4 relative z-10">
           <AlertBanner
             type={alert.type}
             message={alert.message}
@@ -185,11 +192,24 @@ export const App: React.FC = () => {
         </div>
       )}
 
-      {/* Main Workspace Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Dataset Inspector Section */}
-        {isDatasetInspectorOpen && (
-          <section aria-label="Scenario Datasets Inspector">
+      {/* Centered Dataset Inspector Modal */}
+      {isDatasetInspectorOpen && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 sm:p-6 lg:p-10"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Scenario Datasets Inspector"
+        >
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"
+            onClick={() => setIsDatasetInspectorOpen(false)}
+            aria-hidden="true"
+            data-testid="dataset-inspector-backdrop"
+          />
+
+          {/* Centered Modal Card */}
+          <div className="relative w-full max-w-5xl max-h-[90vh] flex flex-col z-10 animate-in fade-in zoom-in-95 duration-200">
             <DatasetInspector
               datasets={datasets}
               isLoading={isLoadingDatasets}
@@ -198,31 +218,21 @@ export const App: React.FC = () => {
               onOpenUpload={() => setIsUploadModalOpen(true)}
               onRefresh={() => fetchDatasets(activeScenarioId)}
               onUnloadScenario={() => handleUnloadScenario(activeScenarioId)}
+              onClose={() => setIsDatasetInspectorOpen(false)}
             />
-          </section>
-        )}
+          </div>
+        </div>
+      )}
 
+      {/* Main Workspace Area */}
+      <main className="flex-1 w-full px-6 sm:px-8 lg:px-10 py-5 space-y-5 relative z-10">
         {/* Tab Panel */}
         <div
           role="tabpanel"
           id={`panel-${activeTab}`}
           aria-labelledby={`tab-${activeTab}`}
-          className="space-y-6"
+          className="space-y-4"
         >
-          {/* Active Section Header */}
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl px-5 py-3.5 shadow-sm flex items-center justify-between">
-            <div>
-              <h1 className="text-base font-bold text-white tracking-tight flex items-center space-x-2">
-                <span>{activeTabDef.label}</span>
-              </h1>
-              <p className="text-xs text-slate-400 mt-0.5">{activeTabDef.description}</p>
-            </div>
-            <div className="hidden sm:flex items-center space-x-2">
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400">
-                Step {NAVIGATION_TABS.findIndex((t) => t.id === activeTab) + 1} of {NAVIGATION_TABS.length}
-              </span>
-            </div>
-          </div>
 
           {activeTab === 'validations' ? (
             <ValidationView
@@ -233,7 +243,7 @@ export const App: React.FC = () => {
               onTraceImpact={(finding) => {
                 setSelectedFindingForImpact(finding);
                 setSelectedLineageNodeId(null);
-                setActiveTab('lineage');
+                setActiveTab('impact');
                 setAlert({
                   type: 'info',
                   message: `Tracing Impact for ${finding.rule_id}`,
@@ -241,7 +251,7 @@ export const App: React.FC = () => {
                 });
               }}
             />
-          ) : activeTab === 'lineage' || activeTab === 'impact' ? (
+          ) : activeTab === 'lineage' ? (
             <LineageView
               scenarioId={activeScenarioId}
               isScenarioLoaded={datasets.length > 0}
@@ -252,6 +262,21 @@ export const App: React.FC = () => {
                 setSelectedLineageNodeId(nodeId);
               }}
             />
+          ) : activeTab === 'impact' ? (
+            <ImpactAnalysisView
+              scenarioId={activeScenarioId}
+              isScenarioLoaded={datasets.length > 0}
+              lastReloadKey={scenarioReloadCounter}
+              initialTargetFinding={selectedFindingForImpact}
+              initialTargetNodeId={selectedLineageNodeId}
+              onNavigateToLineage={(nodeId) => {
+                setSelectedLineageNodeId(nodeId || null);
+                setActiveTab('lineage');
+              }}
+              onNavigateToValidations={() => {
+                setActiveTab('validations');
+              }}
+            />
           ) : activeTab === 'pipelines' ? (
             <PipelineObservabilityView
               scenarioId={activeScenarioId}
@@ -259,7 +284,7 @@ export const App: React.FC = () => {
               onTraceImpact={() => {
                 setSelectedLineageNodeId('src_orders');
                 setSelectedFindingForImpact(null);
-                setActiveTab('lineage');
+                setActiveTab('impact');
                 setAlert({
                   type: 'info',
                   message: 'Tracing Impact from Pipeline Anomaly',
@@ -360,14 +385,14 @@ export const App: React.FC = () => {
       />
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 bg-slate-900/60 py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 space-y-2 sm:space-y-0">
+      <footer className="border-t border-white/[0.06] bg-[#07080D]/90 backdrop-blur-md py-4 mt-auto relative z-10">
+        <div className="w-full px-6 sm:px-8 lg:px-10 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 space-y-2 sm:space-y-0">
           <div className="flex items-center space-x-2">
-            <span>Lux Data Observability Platform</span>
-            <span>•</span>
-            <span className="text-lux-400 font-mono">v0.1.0</span>
+            <span className="text-slate-300 font-medium">Lux Data Observability Platform</span>
+            <span className="text-slate-600">|</span>
+            <span className="text-lux-400 font-mono font-semibold">v0.1.0</span>
           </div>
-          <div>
+          <div className="flex items-center space-x-2 text-slate-400">
             <span>Deterministic Quality Engine & Dependency Lineage</span>
           </div>
         </div>

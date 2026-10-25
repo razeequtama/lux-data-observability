@@ -364,10 +364,10 @@ export const LineageView: React.FC<LineageViewProps> = ({
     return (
       <div
         data-testid="lineage-empty"
-        className="w-full h-[450px] bg-slate-900/60 border border-slate-800 rounded-2xl p-12 flex flex-col items-center justify-center text-center space-y-4"
+        className="w-full h-[450px] bg-[#0d0f1b]/60 backdrop-blur-xl border border-white/[0.07] border-t-purple-400/20 rounded-2xl p-12 flex flex-col items-center justify-center text-center space-y-4 shadow-xl"
       >
-        <div className="w-12 h-12 rounded-full bg-lux-950 border border-lux-700/50 flex items-center justify-center text-lux-400">
-          <Info className="w-6 h-6" />
+        <div className="w-14 h-14 mx-auto rounded-2xl bg-lux-950/80 border border-lux-700/50 flex items-center justify-center text-lux-400 shadow-[0_0_20px_rgba(168,85,247,0.35)]">
+          <Info className="w-7 h-7" />
         </div>
         <div className="max-w-md mx-auto space-y-2">
           <h3 className="text-base font-bold text-white">No Lineage Graph Loaded Yet</h3>
@@ -383,9 +383,9 @@ export const LineageView: React.FC<LineageViewProps> = ({
     return (
       <div
         data-testid="lineage-loading"
-        className="w-full h-[650px] bg-slate-950 border border-slate-800 rounded-2xl flex flex-col items-center justify-center space-y-3"
+        className="w-full h-[650px] bg-[#08090E] border border-white/[0.08] rounded-2xl flex flex-col items-center justify-center space-y-3"
       >
-        <div className="w-10 h-10 border-2 border-lux-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-2 border-lux-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
         <p className="text-sm text-slate-400 font-mono">
           Loading Directed Acyclic Graph & Computing Dagre Coordinates...
         </p>
@@ -397,9 +397,9 @@ export const LineageView: React.FC<LineageViewProps> = ({
     return (
       <div
         data-testid="lineage-error"
-        className="w-full h-[400px] bg-slate-950 border border-rose-900/50 rounded-2xl p-8 flex flex-col items-center justify-center text-center space-y-4"
+        className="w-full h-[400px] bg-[#08090E] border border-rose-500/30 rounded-2xl p-8 flex flex-col items-center justify-center text-center space-y-4"
       >
-        <div className="w-12 h-12 rounded-full bg-rose-950/80 border border-rose-700/60 flex items-center justify-center text-rose-400">
+        <div className="w-12 h-12 rounded-full bg-rose-950/80 border border-rose-500/60 flex items-center justify-center text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.4)]">
           <AlertTriangle className="w-6 h-6" />
         </div>
         <h3 className="text-lg font-bold text-white">Failed to Load Lineage DAG</h3>
@@ -407,7 +407,7 @@ export const LineageView: React.FC<LineageViewProps> = ({
         <button
           type="button"
           onClick={loadGraph}
-          className="px-4 py-2 rounded-lg bg-lux-700 hover:bg-lux-600 text-white text-xs font-semibold"
+          className="px-4 py-2 rounded-xl bg-lux-700 hover:bg-lux-600 text-white text-xs font-semibold shadow-[0_0_12px_rgba(124,58,237,0.3)] cursor-pointer"
         >
           Retry Connection
         </button>
@@ -418,10 +418,10 @@ export const LineageView: React.FC<LineageViewProps> = ({
   return (
     <div
       data-testid="lineage-dag-container"
-      className="w-full h-[750px] bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden relative flex flex-col shadow-2xl"
+      className="w-full h-[calc(100vh-140px)] min-h-[580px] max-h-[820px] bg-[#08090E] border border-white/[0.08] border-t-purple-400/30 rounded-2xl overflow-hidden relative flex flex-col shadow-2xl shadow-black/60"
     >
       {/* Top Toolbar */}
-      <div className="bg-slate-900/90 border-b border-slate-800 px-4 py-3 flex flex-wrap items-center justify-between gap-3 z-10 backdrop-blur">
+      <div className="bg-[#0d0f1b]/90 border-b border-white/[0.06] px-4 py-3 flex flex-wrap items-center justify-between gap-3 z-10 backdrop-blur-xl">
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />

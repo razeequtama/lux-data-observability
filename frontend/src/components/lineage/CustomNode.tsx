@@ -205,30 +205,30 @@ export const CustomNode = memo(({ id, data, selected }: CustomNodeProps) => {
   // Determine border & glow styling
   const getContainerClasses = () => {
     const base =
-      'w-64 rounded-xl border bg-gradient-to-b p-3 text-slate-100 shadow-lg transition-all duration-200 text-left';
+      'w-64 rounded-xl border bg-gradient-to-b from-[#101222]/90 to-[#0a0b14]/95 p-3 text-slate-100 shadow-xl transition-all duration-200 text-left border-white/[0.08]';
 
     if (impactStatus === 'CONFIRMED_FAILED') {
       return clsx(
         base,
-        'border-rose-500 bg-slate-900/95 ring-2 ring-rose-500/80 shadow-rose-950/50'
+        'border-rose-500 bg-[#120a14]/95 ring-2 ring-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.5)]'
       );
     }
     if (impactStatus === 'DIRECTLY_AFFECTED') {
       return clsx(
         base,
-        'border-amber-500 bg-slate-900/95 ring-2 ring-amber-500/70 shadow-amber-950/40'
+        'border-amber-500 bg-[#14120a]/95 ring-2 ring-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.45)]'
       );
     }
     if (impactStatus === 'POTENTIALLY_AFFECTED') {
       return clsx(
         base,
-        'border-lux-500 bg-slate-900/95 ring-2 ring-lux-500/60 ring-dashed shadow-lux-950/30'
+        'border-lux-400 bg-[#120e20]/95 ring-2 ring-lux-400/80 shadow-[0_0_18px_rgba(168,85,247,0.35)]'
       );
     }
     if (isSelected) {
       return clsx(
         base,
-        'border-lux-400 bg-slate-900 ring-2 ring-lux-400 shadow-xl shadow-lux-950/60'
+        'border-lux-400 bg-[#130f24] ring-2 ring-lux-400 shadow-[0_0_22px_rgba(168,85,247,0.45)]'
       );
     }
 

@@ -221,15 +221,15 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
 
   return (
     <div
-      className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm"
+      className="bg-[#0d0f1b]/80 backdrop-blur-xl border border-white/[0.07] border-t-purple-400/30 rounded-2xl overflow-hidden shadow-xl shadow-black/40"
       data-testid="findings-table-container"
     >
       {/* Filters & Search Toolbar */}
-      <div className="p-4 border-b border-slate-800 bg-slate-900/90 space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="p-6 sm:p-7 border-b border-white/[0.08] bg-[#0c0e1a]/95 space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           {/* Search Bar */}
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               role="searchbox"
@@ -238,14 +238,14 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by rule ID, name, dataset, or issue..."
-              className="w-full pl-9 pr-4 py-1.5 bg-slate-950 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-lux-500 focus:border-lux-500 transition-colors"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-950/80 border border-white/[0.08] rounded-xl text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-lux-500 focus:border-lux-500 transition-colors shadow-inner"
             />
           </div>
 
           {/* Filter Dropdowns */}
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2.5 text-xs">
             {/* Severity Filter */}
-            <div className="flex items-center space-x-1.5">
+            <div className="flex items-center space-x-2">
               <label htmlFor="filter-severity" className="text-slate-400 font-medium">
                 Severity:
               </label>
@@ -254,7 +254,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                 data-testid="filter-severity"
                 value={severityFilter}
                 onChange={(e) => setSeverityFilter(e.target.value as RuleSeverity | 'ALL')}
-                className="bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-lux-500"
+                className="bg-slate-950/80 border border-white/[0.08] text-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-lux-500 shadow-inner font-medium"
               >
                 <option value="ALL">All Severities</option>
                 <option value="CRITICAL">CRITICAL</option>
@@ -266,7 +266,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center space-x-1.5">
+            <div className="flex items-center space-x-2">
               <label htmlFor="filter-status" className="text-slate-400 font-medium">
                 Status:
               </label>
@@ -275,7 +275,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                 data-testid="filter-status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as RuleStatus | 'ALL')}
-                className="bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-lux-500"
+                className="bg-slate-950/80 border border-white/[0.08] text-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-lux-500 shadow-inner font-medium"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="FAILED">FAILED</option>
@@ -285,7 +285,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
             </div>
 
             {/* Dataset Filter */}
-            <div className="flex items-center space-x-1.5">
+            <div className="flex items-center space-x-2">
               <label htmlFor="filter-dataset" className="text-slate-400 font-medium">
                 Dataset:
               </label>
@@ -294,7 +294,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                 data-testid="filter-dataset"
                 value={datasetFilter}
                 onChange={(e) => setDatasetFilter(e.target.value)}
-                className="bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-lux-500"
+                className="bg-slate-950/80 border border-white/[0.08] text-slate-200 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-lux-500 shadow-inner font-medium"
               >
                 <option value="ALL">All Datasets</option>
                 {datasetOptions.map((d) => (
@@ -311,10 +311,10 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                 type="button"
                 onClick={handleResetFilters}
                 data-testid="reset-filters-btn"
-                className="flex items-center space-x-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors"
+                className="flex items-center space-x-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700 transition-colors cursor-pointer"
                 title="Reset all filters"
               >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset</span>
               </button>
             )}
@@ -341,10 +341,10 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
       {/* Findings Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse" data-testid="findings-table">
-          <thead className="bg-slate-950/60 border-b border-slate-800 text-slate-400">
+          <thead className="bg-[#090b14]/90 border-b border-white/[0.08] text-slate-400">
             <tr>
               <th
-                className="py-3 px-4 font-semibold cursor-pointer hover:text-white"
+                className="py-4 px-5 sm:px-6 font-semibold cursor-pointer hover:text-white"
                 onClick={() => handleSort('status')}
               >
                 <div className="flex items-center space-x-1">
@@ -353,7 +353,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                 </div>
               </th>
               <th
-                className="py-3 px-4 font-semibold cursor-pointer hover:text-white"
+                className="py-4 px-5 sm:px-6 font-semibold cursor-pointer hover:text-white"
                 onClick={() => handleSort('severity')}
               >
                 <div className="flex items-center space-x-1">
@@ -361,9 +361,9 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 text-slate-400" />
                 </div>
               </th>
-              <th className="py-3 px-4 font-semibold">Rule & Issue Diagnostics</th>
+              <th className="py-4 px-5 sm:px-6 font-semibold">Rule & Issue Diagnostics</th>
               <th
-                className="py-3 px-4 font-semibold cursor-pointer hover:text-white"
+                className="py-4 px-5 sm:px-6 font-semibold cursor-pointer hover:text-white"
                 onClick={() => handleSort('dataset')}
               >
                 <div className="flex items-center space-x-1">
@@ -372,7 +372,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                 </div>
               </th>
               <th
-                className="py-3 px-4 font-semibold text-right cursor-pointer hover:text-white"
+                className="py-4 px-5 sm:px-6 font-semibold text-right cursor-pointer hover:text-white"
                 onClick={() => handleSort('records')}
               >
                 <div className="flex items-center justify-end space-x-1">
@@ -380,14 +380,14 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                   <ArrowUpDown className="w-3 h-3 text-slate-400" />
                 </div>
               </th>
-              <th className="py-3 px-4 font-semibold text-right">Duration</th>
-              <th className="py-3 px-4 font-semibold text-right">Actions</th>
+              <th className="py-4 px-5 sm:px-6 font-semibold text-right">Duration</th>
+              <th className="py-4 px-5 sm:px-6 font-semibold text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/80">
+          <tbody className="divide-y divide-white/[0.04]">
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-slate-400">
+                <td colSpan={7} className="py-16 text-center text-slate-400">
                   <div className="inline-flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-lux-500 border-t-transparent rounded-full animate-spin" />
                     <span>Evaluating validation checks...</span>
@@ -396,7 +396,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
               </tr>
             ) : sortedFindings.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-slate-400 space-y-2">
+                <td colSpan={7} className="py-16 text-center text-slate-400 space-y-2">
                   <div className="w-10 h-10 mx-auto rounded-full bg-slate-800/80 flex items-center justify-center text-slate-400">
                     <CheckCircle2 className="w-5 h-5 text-status-healthy" />
                   </div>
@@ -408,7 +408,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                     <button
                       type="button"
                       onClick={handleResetFilters}
-                      className="mt-2 inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-lux-300 rounded-lg text-xs font-semibold"
+                      className="mt-2 inline-flex items-center space-x-1 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-lux-300 rounded-xl text-xs font-semibold cursor-pointer"
                     >
                       <span>Clear all filters</span>
                     </button>
@@ -430,49 +430,51 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                     onClick={() => onSelectFinding(finding)}
                     className={`transition-colors cursor-pointer group ${
                       isSelected
-                        ? 'bg-lux-950/40 border-l-2 border-l-lux-500'
-                        : 'hover:bg-slate-800/50'
+                        ? 'bg-lux-950/50 border-l-2 border-l-lux-400 shadow-inner'
+                        : finding.status === 'FAILED'
+                          ? 'bg-rose-950/[0.08] border-l-2 border-l-rose-500/70 hover:bg-rose-950/20'
+                          : 'hover:bg-white/[0.03]'
                     }`}
                   >
                     {/* Status */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
+                    <td className="py-4.5 px-5 sm:px-6 whitespace-nowrap">
                       {getStatusBadge(finding.status)}
                     </td>
 
                     {/* Severity */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
+                    <td className="py-4.5 px-5 sm:px-6 whitespace-nowrap">
                       {getSeverityBadge(finding.severity)}
                     </td>
 
                     {/* Rule Info & Diagnostics */}
-                    <td className="py-3.5 px-4 max-w-md">
-                      <div className="space-y-1">
+                    <td className="py-4.5 px-5 sm:px-6 max-w-md">
+                      <div className="space-y-1.5">
                         <div className="flex items-center space-x-2">
-                          <code className="font-mono font-bold text-lux-300 text-[11px] bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">
+                          <code className="font-mono font-bold text-lux-300 text-[11px] bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
                             {finding.rule_id}
                           </code>
                           <span className="font-semibold text-white group-hover:text-lux-200 transition-colors">
                             {finding.rule_name}
                           </span>
-                          <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700/60">
+                          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-slate-700/60 font-semibold">
                             {formatCategory(finding.rule_category)}
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 line-clamp-1">
+                        <p className="text-xs text-slate-400 line-clamp-1 leading-relaxed">
                           {finding.message}
                         </p>
                       </div>
                     </td>
 
                     {/* Dataset */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span className="font-mono text-slate-200 bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700 text-xs">
+                    <td className="py-4.5 px-5 sm:px-6 whitespace-nowrap">
+                      <span className="font-mono text-slate-200 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700 text-xs font-semibold">
                         {finding.dataset_id}
                       </span>
                     </td>
 
                     {/* Violations / Total */}
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                    <td className="py-4.5 px-5 sm:px-6 text-right whitespace-nowrap">
                       <div className="space-y-0.5">
                         <div className="font-mono font-bold text-slate-200">
                           <span
@@ -499,13 +501,13 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                     </td>
 
                     {/* Execution Duration */}
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap font-mono text-slate-400">
+                    <td className="py-4.5 px-5 sm:px-6 text-right whitespace-nowrap font-mono text-slate-400">
                       {finding.execution_duration_ms} ms
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end space-x-1.5">
+                    <td className="py-4.5 px-5 sm:px-6 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end space-x-2">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -514,7 +516,7 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                           }}
                           aria-label={`View evidence for ${finding.rule_id}`}
                           data-testid={`view-evidence-btn-${finding.rule_id}`}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 transition-colors"
+                          className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/[0.08] hover:border-purple-400/40 transition-all cursor-pointer shadow-sm"
                           title="Inspect sample records and evidence"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -528,10 +530,10 @@ export const FindingsTable: React.FC<FindingsTableProps> = ({
                             }}
                             aria-label={`Trace impact for ${finding.rule_id}`}
                             data-testid={`trace-impact-btn-${finding.rule_id}`}
-                            className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-lux-900/60 hover:bg-lux-800/80 text-lux-300 border border-lux-700/50 hover:border-lux-600 transition-colors text-[11px] font-semibold"
+                            className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-lux-700 to-indigo-600 hover:from-lux-600 hover:to-indigo-500 text-white border border-purple-400/30 hover:border-purple-300 shadow-[0_0_12px_rgba(124,58,237,0.3)] transition-all text-xs font-semibold cursor-pointer"
                             title="Trace downstream blast radius in lineage DAG"
                           >
-                            <Target className="w-3.5 h-3.5 text-lux-400" />
+                            <Target className="w-3.5 h-3.5 text-purple-200" />
                             <span className="hidden sm:inline">Trace Impact</span>
                           </button>
                         )}

@@ -123,25 +123,28 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
   return (
     <div className="space-y-6" data-testid="validation-view">
       {/* Action Header Banner */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <div className="p-1.5 rounded-lg bg-lux-950/80 border border-lux-700/40 text-lux-400">
-              <ShieldCheck className="w-4 h-4" />
+      <div className="relative overflow-hidden bg-[#0d0f1b]/80 backdrop-blur-xl border border-white/[0.07] border-t-purple-400/30 rounded-3xl p-6 sm:p-7 shadow-xl shadow-black/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        {/* Subtle background flare */}
+        <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-purple-600/10 via-indigo-600/5 to-transparent pointer-events-none" />
+
+        <div className="space-y-1.5 relative z-10">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-2xl bg-lux-950/80 border border-lux-700/50 text-lux-400 shadow-[0_0_14px_rgba(168,85,247,0.35)]">
+              <ShieldCheck className="w-5 h-5" />
             </div>
-            <h2 className="text-base font-bold text-white tracking-tight">
+            <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
               Deterministic Quality Engine
             </h2>
-            <span className="text-xs px-2 py-0.5 rounded-full font-mono bg-slate-800 text-slate-300 border border-slate-700">
-              Scenario: {scenarioId}
+            <span className="text-xs px-3.5 py-1 rounded-xl font-mono font-semibold bg-slate-900/90 text-purple-200 border border-white/[0.08] shadow-inner">
+              scenario: {scenarioId}
             </span>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-400">
             Executes structural, uniqueness, referential integrity, range, and temporal rules against datasets.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2.5 w-full sm:w-auto">
+        <div className="flex items-center space-x-3 w-full sm:w-auto relative z-10">
           {currentRun && (
             <button
               type="button"
@@ -149,10 +152,10 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
               disabled={isLoadingRun || isRunningValidation}
               data-testid="refresh-run-btn"
               aria-label="Refresh run findings"
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+              className="p-3 rounded-2xl bg-slate-900/80 hover:bg-slate-800 text-slate-300 border border-white/[0.08] hover:border-purple-400/40 transition-all shadow-sm cursor-pointer"
               title="Refresh findings"
             >
-              <RotateCw className={`w-4 h-4 ${isLoadingRun ? 'animate-spin' : ''}`} />
+              <RotateCw className={`w-4.5 h-4.5 ${isLoadingRun ? 'animate-spin' : ''}`} />
             </button>
           )}
 
@@ -161,16 +164,16 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
             onClick={handleExecuteValidationRun}
             disabled={isRunningValidation || isLoadingRun}
             data-testid="execute-validations-btn"
-            className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-4 py-2 bg-lux-700 hover:bg-lux-600 disabled:opacity-50 text-white rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer"
+            className="flex-1 sm:flex-initial flex items-center justify-center space-x-2.5 px-7 py-3 bg-gradient-to-r from-lux-700 via-lux-600 to-indigo-600 hover:from-lux-600 hover:to-indigo-500 disabled:opacity-50 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-[0_0_22px_rgba(124,58,237,0.4)] ring-1 ring-purple-400/50 cursor-pointer"
           >
             {isRunningValidation ? (
               <>
-                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 <span>Evaluating Rules...</span>
               </>
             ) : (
               <>
-                <Play className="w-3.5 h-3.5 fill-current" />
+                <Play className="w-4 h-4 fill-current" />
                 <span>{currentRun ? 'Re-run Quality Validations' : 'Execute Quality Validations'}</span>
               </>
             )}
@@ -192,18 +195,18 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
       {!currentRun && !isLoadingRun && !isRunningValidation ? (
         <div
           data-testid="no-runs-empty-state"
-          className="bg-slate-900/60 border border-slate-800 rounded-xl p-12 text-center space-y-4"
+          className="relative overflow-hidden bg-[#0d0f1b]/60 backdrop-blur-xl border border-white/[0.07] border-t-purple-400/20 rounded-3xl p-16 text-center space-y-6 shadow-xl"
         >
-          <div className="w-12 h-12 mx-auto rounded-full bg-lux-950 border border-lux-700/50 flex items-center justify-center text-lux-400">
-            <ShieldCheck className="w-6 h-6" />
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-lux-950/80 border border-lux-700/50 flex items-center justify-center text-lux-400 shadow-[0_0_24px_rgba(168,85,247,0.4)]">
+            <ShieldCheck className="w-8 h-8" />
           </div>
-          <div className="max-w-md mx-auto space-y-2">
-            <h3 className="text-base font-bold text-white">
+          <div className="max-w-md mx-auto space-y-2.5">
+            <h3 className="text-lg font-bold text-white tracking-tight">
               {availableDatasets && availableDatasets.length === 0
                 ? 'No Scenario Loaded Yet'
                 : 'No Validation Runs Executed Yet'}
             </h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
               {availableDatasets && availableDatasets.length === 0
                 ? 'Click "Load Scenario" in the top bar to ingest datasets into the workspace before executing validations.'
                 : `Click "Execute Quality Validations" to evaluate deterministic rules against the active scenario datasets (${availableDatasets?.length || 4} files) and inspect structured row findings.`}
@@ -214,9 +217,9 @@ export const ValidationView: React.FC<ValidationViewProps> = ({
               type="button"
               onClick={handleExecuteValidationRun}
               data-testid="empty-state-run-btn"
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-lux-700 hover:bg-lux-600 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+              className="inline-flex items-center space-x-2.5 px-8 py-3.5 bg-gradient-to-r from-lux-700 via-lux-600 to-indigo-600 hover:from-lux-600 hover:to-indigo-500 text-white rounded-2xl text-xs sm:text-sm font-bold transition-all shadow-[0_0_24px_rgba(124,58,237,0.45)] ring-1 ring-purple-400/50 cursor-pointer"
             >
-              <Play className="w-3.5 h-3.5 fill-current" />
+              <Play className="w-4 h-4 fill-current" />
               <span>Execute Validations Now</span>
             </button>
           )}

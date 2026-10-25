@@ -41,7 +41,7 @@ export const ValidationSummaryCards: React.FC<ValidationSummaryCardsProps> = ({
             <code className="font-mono bg-slate-800 text-lux-300 px-1.5 py-0.5 rounded border border-slate-700">
               {run.run_id}
             </code>
-            <span>•</span>
+            <span className="text-slate-600">|</span>
             <span className="capitalize">
               Fixture: <strong className="text-slate-200">{run.fixture_version}</strong>
             </span>
@@ -73,11 +73,11 @@ export const ValidationSummaryCards: React.FC<ValidationSummaryCardsProps> = ({
         {/* Total Checks */}
         <div
           data-testid="summary-total-checks"
-          className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm relative overflow-hidden"
+          className="bg-[#0d0f1b]/80 backdrop-blur-xl border border-white/[0.07] border-t-purple-400/30 rounded-2xl p-4 shadow-xl shadow-black/40 relative overflow-hidden transition-all duration-200 hover:border-purple-400/40 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-400">Total Checks</span>
-            <div className="p-1.5 rounded-lg bg-slate-800 text-lux-400 border border-slate-700/50">
+            <div className="p-1.5 rounded-lg bg-slate-900/80 text-lux-400 border border-white/[0.08] shadow-inner">
               <ShieldCheck className="w-4 h-4" />
             </div>
           </div>
@@ -95,11 +95,11 @@ export const ValidationSummaryCards: React.FC<ValidationSummaryCardsProps> = ({
         {/* Passed Checks */}
         <div
           data-testid="summary-passed-checks"
-          className="bg-slate-900 border border-emerald-900/30 rounded-xl p-4 shadow-sm relative overflow-hidden"
+          className="bg-[#0d0f1b]/80 backdrop-blur-xl border border-emerald-500/20 border-t-emerald-400/40 rounded-2xl p-4 shadow-xl shadow-black/40 relative overflow-hidden transition-all duration-200 hover:border-emerald-400/50 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-emerald-400">Passed</span>
-            <div className="p-1.5 rounded-lg bg-emerald-950/50 text-status-healthy border border-emerald-800/40">
+            <div className="p-1.5 rounded-lg bg-emerald-950/60 text-status-healthy border border-emerald-700/50 shadow-[0_0_8px_rgba(16,185,129,0.25)]">
               <CheckCircle2 className="w-4 h-4" />
             </div>
           </div>
@@ -114,24 +114,27 @@ export const ValidationSummaryCards: React.FC<ValidationSummaryCardsProps> = ({
           </div>
         </div>
 
-        {/* Failed Checks */}
+        {/* Failed Checks — The Beacon */}
         <div
           data-testid="summary-failed-checks"
-          className="bg-slate-900 border border-rose-900/30 rounded-xl p-4 shadow-sm relative overflow-hidden"
+          className="bg-rose-950/20 backdrop-blur-xl border border-rose-500/30 border-t-rose-400/60 rounded-2xl p-4 shadow-xl shadow-black/40 relative overflow-hidden transition-all duration-200 hover:border-rose-400/60 hover:shadow-[0_0_25px_rgba(244,63,94,0.25)] ring-1 ring-rose-500/20"
         >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-rose-400">Failed</span>
-            <div className="p-1.5 rounded-lg bg-rose-950/50 text-status-corrupted border border-rose-800/40">
+          {/* Subtle Beacon flare */}
+          <div className="absolute -top-10 -right-10 w-24 h-24 bg-rose-500/15 rounded-full blur-xl pointer-events-none" />
+
+          <div className="flex items-center justify-between relative z-10">
+            <span className="text-xs font-semibold text-rose-300">Failed</span>
+            <div className="p-1.5 rounded-lg bg-rose-950/70 text-status-corrupted border border-rose-600/50 shadow-[0_0_12px_rgba(244,63,94,0.4)]">
               <XCircle className="w-4 h-4" />
             </div>
           </div>
-          <div className="mt-2 flex items-baseline space-x-2">
+          <div className="mt-2 flex items-baseline space-x-2 relative z-10">
             <span className="text-2xl font-black text-status-corrupted tracking-tight">
               {isLoading ? '...' : failedChecks}
             </span>
             <span className="text-xs text-slate-400 font-mono">violations</span>
           </div>
-          <div className="mt-1 text-[11px] text-slate-400">
+          <div className="mt-1 text-[11px] text-slate-400 relative z-10">
             Requires active investigation
           </div>
         </div>
@@ -139,11 +142,11 @@ export const ValidationSummaryCards: React.FC<ValidationSummaryCardsProps> = ({
         {/* Warnings */}
         <div
           data-testid="summary-warning-checks"
-          className="bg-slate-900 border border-amber-900/30 rounded-xl p-4 shadow-sm relative overflow-hidden"
+          className="bg-[#0d0f1b]/80 backdrop-blur-xl border border-amber-500/20 border-t-amber-400/40 rounded-2xl p-4 shadow-xl shadow-black/40 relative overflow-hidden transition-all duration-200 hover:border-amber-400/50 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-amber-400">Warnings</span>
-            <div className="p-1.5 rounded-lg bg-amber-950/50 text-status-warning border border-amber-800/40">
+            <div className="p-1.5 rounded-lg bg-amber-950/60 text-status-warning border border-amber-700/50">
               <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
@@ -161,11 +164,11 @@ export const ValidationSummaryCards: React.FC<ValidationSummaryCardsProps> = ({
         {/* Duration */}
         <div
           data-testid="summary-duration"
-          className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm relative overflow-hidden col-span-2 sm:col-span-1"
+          className="bg-[#0d0f1b]/80 backdrop-blur-xl border border-white/[0.07] border-t-purple-400/30 rounded-2xl p-4 shadow-xl shadow-black/40 relative overflow-hidden col-span-2 sm:col-span-1 transition-all duration-200 hover:border-purple-400/40 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]"
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-400">Duration</span>
-            <div className="p-1.5 rounded-lg bg-slate-800 text-slate-300 border border-slate-700/50">
+            <div className="p-1.5 rounded-lg bg-slate-900/80 text-slate-300 border border-white/[0.08] shadow-inner">
               <Clock className="w-4 h-4" />
             </div>
           </div>
